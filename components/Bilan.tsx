@@ -6,9 +6,10 @@ import {
 } from "react-native";
 import { ScrollView, Text, View } from "../components/Themed";
 import { data } from "../fonctionUtilitaire/data";
-import shadow, {
+import {
   horizontalScale,
   moderateScale,
+  shadow,
   verticalScale,
 } from "../fonctionUtilitaire/metrics";
 import { MonoText } from "./StyledText";
@@ -22,7 +23,7 @@ const Bilan = () => {
         width,
         height: verticalScale(200),
       }}
-      lightColor="#fff1"
+      lightColor="#f7f8fc"
     >
       {/* <Text
       lightColor="#777"
@@ -36,7 +37,7 @@ const Bilan = () => {
     </Text> */}
       <ScrollView
         horizontal={true}
-        lightColor="#fff1"
+        lightColor="#fff"
         style={{ flex: 1 }}
         contentContainerStyle={{ alignItems: "center" }}
         pagingEnabled={true}
@@ -44,6 +45,7 @@ const Bilan = () => {
       >
         {data.map((item, index) => (
           <View
+            lightColor="#f7f8fc"
             key={index}
             style={[
               {
@@ -55,7 +57,7 @@ const Bilan = () => {
                 alignItems: "center",
                 borderRadius: moderateScale(5),
               },
-              shadow(8),
+              shadow(10),
             ]}
           >
             <ViewNatif

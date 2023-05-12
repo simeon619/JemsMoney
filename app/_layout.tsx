@@ -8,13 +8,20 @@ import { useFonts } from "expo-font";
 import { SplashScreen, Stack } from "expo-router";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";
-
+//@ts-ignore
+import { MagicModalPortal } from "react-native-magic-modal";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { Provider } from "react-redux";
+import { persistStore } from "redux-persist";
+import { PersistGate } from "redux-persist/integration/react";
+import { Text } from "../components/Themed";
+import { store } from "../store/store";
 export { ErrorBoundary } from "expo-router";
 
 export const unstable_settingss = {
-  // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: "(tabs)",
 };
+let persistor = persistStore(store);
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -24,9 +31,12 @@ export default function RootLayout() {
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
+    const purge = async () => {
+      await persistor.purge();
+    };
+    // purge();
     if (error) throw error;
   }, [error]);
-  console.log(loaded, error);
 
   return (
     <>
@@ -39,20 +49,60 @@ export default function RootLayout() {
 
 function RootLayoutNav({ style }: any) {
   const colorScheme = useColorScheme();
+  console.log(colorScheme);
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{}}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="modal"
-          options={{ presentation: "modal",headerShown: false, animation: "simple_push" }}
-        />
-        <Stack.Screen
-          name="messagerie"
-          options={{ presentation: "modal",headerShown: false, animation: "simple_push" }}
-        />
-      </Stack>
+      <Provider store={store}>
+        <PersistGate
+          loading={
+            <Text style={[{ fontSize: 60, alignItems: "center" }]}>
+              Loading...
+            </Text>
+            // <SplashScreen />
+          }
+          persistor={persistor}
+        >
+          <SafeAreaProvider>
+            <MagicModalPortal />
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="modal"
+                options={{
+                  presentation: "modal",
+                  headerShown: false,
+                  animation: "simple_push",
+                }}
+              />
+              <Stack.Screen
+                name="messagerie"
+                options={{
+                  presentation: "modal",
+                  // headerShown: true,
+                  animation: "simple_push",
+                }}
+              />
+              <Stack.Screen
+                name="discussion"
+                options={{
+                  presentation: "modal",
+                  headerShown: false,
+                  animation: "simple_push",
+                }}
+              />
+              <Stack.Screen
+                name="formTransaction"
+                options={{
+                  presentation: "modal",
+                  headerShown: false,
+                  animation: "simple_push",
+                }}
+              />
+            </Stack>
+          </SafeAreaProvider>
+        </PersistGate>
+      </Provider>
     </ThemeProvider>
   );
 }

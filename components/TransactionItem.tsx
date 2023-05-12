@@ -4,9 +4,10 @@ import { Pressable, useColorScheme, useWindowDimensions } from "react-native";
 
 import Colors from "../constants/Colors";
 import { transactionShema } from "../fonctionUtilitaire/data";
-import shadow, {
+import {
   horizontalScale,
   moderateScale,
+  shadow,
   verticalScale,
 } from "../fonctionUtilitaire/metrics";
 import { MonoText } from "./StyledText";

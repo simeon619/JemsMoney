@@ -11,19 +11,19 @@ import Transaction from "../../components/Transaction";
 export default function Home() {
   const progress: any = useDrawerProgress();
   const animatedStyle = useAnimatedStyle(() => {
-    const translateX = interpolate(progress.value, [0, 1], [0, 50]);
+    const scale = interpolate(progress.value, [0, 1], [1, 1.05]);
     const borderRadius = interpolate(progress.value, [0, 1], [0, 12]);
 
     return {
       borderRadius,
       flex: 1,
       overflow: "hidden",
-      transform: [{ translateX }],
+      transform: [{ scale }],
     };
   }, []);
   return (
     <Animated.View style={[animatedStyle]}>
-      <View style={styles.container} lightColor="#fff1">
+      <View style={styles.container} lightColor="#f7f8fc">
         <Bilan />
         <Transaction />
         <ButtonAdd />

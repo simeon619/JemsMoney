@@ -1,8 +1,9 @@
 import React from "react";
 import { useWindowDimensions } from "react-native";
 import { dataTransactions } from "../fonctionUtilitaire/data";
-import shadow, {
+import {
   moderateScale,
+  shadow,
   verticalScale,
 } from "../fonctionUtilitaire/metrics";
 import { MonoText } from "./StyledText";
