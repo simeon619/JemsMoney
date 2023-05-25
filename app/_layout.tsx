@@ -15,7 +15,10 @@ import { Provider } from "react-redux";
 import { persistStore } from "redux-persist";
 import { PersistGate } from "redux-persist/integration/react";
 import { Text } from "../components/Themed";
-import { store } from "../store/store";
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import SQuery from "../lib/SQueryClient";
+import { store } from "../store";
 export { ErrorBoundary } from "expo-router";
 
 export const unstable_settingss = {
@@ -23,18 +26,41 @@ export const unstable_settingss = {
 };
 let persistor = persistStore(store);
 
+export const PURGE_ALL_DATA = async () => {
+  persistor.pause();
+  persistor.flush().then(() => {
+    return persistor.purge();
+  });
+};
+export const persistanceSquery = () => {
+  SQuery.dataStore = {
+    useStore: false,
+    updateTimeOut: 500,
+    setData: async (key, data) => {
+      try {
+        AsyncStorage.setItem(key, JSON.stringify(data));
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    getData: async (key) => {
+      try {
+        return JSON.parse((await AsyncStorage.getItem(key)) || "");
+      } catch (error) {
+        console.error(error);
+        return null;
+      }
+    },
+  };
+};
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     ...FontAwesome.font,
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
-    const purge = async () => {
-      await persistor.purge();
-    };
-    // purge();
+    persistanceSquery();
     if (error) throw error;
   }, [error]);
 
@@ -49,8 +75,6 @@ export default function RootLayout() {
 
 function RootLayoutNav({ style }: any) {
   const colorScheme = useColorScheme();
-  console.log(colorScheme);
-
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Provider store={store}>
@@ -72,15 +96,15 @@ function RootLayoutNav({ style }: any) {
                 options={{
                   presentation: "modal",
                   headerShown: false,
-                  animation: "simple_push",
+                  animation: "fade_from_bottom",
                 }}
               />
               <Stack.Screen
                 name="messagerie"
                 options={{
                   presentation: "modal",
-                  // headerShown: true,
-                  animation: "simple_push",
+                  headerShown: false,
+                  animation: "slide_from_right",
                 }}
               />
               <Stack.Screen
@@ -96,7 +120,37 @@ function RootLayoutNav({ style }: any) {
                 options={{
                   presentation: "modal",
                   headerShown: false,
-                  animation: "simple_push",
+                  animation: "slide_from_bottom",
+                }}
+              />
+              <Stack.Screen
+                name="DetailTransaction"
+                options={{
+                  presentation: "modal",
+                  headerShown: false,
+                  // headerTitle: "",
+                  animation: "slide_from_bottom",
+                }}
+              />
+
+              <Stack.Screen
+                name="register/login"
+                options={{
+                  presentation: "modal",
+                  headerShown: false,
+                  headerTitle: "",
+                  title: "",
+                  animation: "flip",
+                }}
+              />
+
+              <Stack.Screen
+                name="register/signup"
+                options={{
+                  presentation: "modal",
+                  headerShown: false,
+                  headerTitle: "",
+                  animation: "flip",
                 }}
               />
             </Stack>

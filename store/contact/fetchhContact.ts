@@ -1,17 +1,16 @@
-import { AnyAction, Dispatch, EmptyObject } from "@reduxjs/toolkit";
+import { AnyAction, Dispatch } from "@reduxjs/toolkit";
 import * as Contacts from "expo-contacts";
-import { PersistPartial } from "redux-persist/es/persistReducer";
+import * as Linking from "expo-linking";
 import { ContactShema } from "../../app/modal";
 import { addContact } from "./contactSlice";
 
 export async function fetchContacts(
-  listContact: EmptyObject & {
-    contact: ContactShema[];
-  } & PersistPartial,
+  listContact: ContactShema[],
   dispatch: Dispatch<AnyAction>
 ) {
-  if (listContact.contact.length === 0) {
+  if (listContact.length === 0) {
     const { status } = await Contacts.requestPermissionsAsync();
+    console.log({ status });
     if (status === "granted") {
       const { data } = await Contacts.getContactsAsync({
         rawContacts: true,
@@ -29,6 +28,9 @@ export async function fetchContacts(
 
         dispatch(addContact(mappedContacts));
       }
+    } else {
+      console.log("contact");
+      Linking.openSettings();
     }
   }
 }

@@ -1,54 +1,58 @@
 import { Image } from "expo-image";
-import React from "react";
-import { Pressable, useColorScheme, useWindowDimensions } from "react-native";
-
+import { useRouter } from "expo-router";
+import React, { memo } from "react";
+import {
+  TouchableOpacity,
+  useColorScheme,
+  useWindowDimensions,
+} from "react-native";
 import Colors from "../constants/Colors";
-import { transactionShema } from "../fonctionUtilitaire/data";
 import {
   horizontalScale,
   moderateScale,
-  shadow,
   verticalScale,
 } from "../fonctionUtilitaire/metrics";
+import { transactionDataShema } from "../store/transaction/transactionSlice";
 import { MonoText } from "./StyledText";
 import { View } from "./Themed";
 
 const TransactionItem = ({
   dataTransaction,
 }: {
-  dataTransaction: transactionShema;
+  dataTransaction: transactionDataShema;
 }) => {
   const { height, width } = useWindowDimensions();
   const colorScheme = useColorScheme();
   let ColorTransaction = determineStatus(
     dataTransaction.status.toLocaleLowerCase()
   );
-
+  let router = useRouter();
   return (
-    <Pressable>
+    <TouchableOpacity
+      onPress={() => {
+        router.push({
+          pathname: "/DetailTransaction",
+          params: dataTransaction,
+        });
+      }}
+    >
       <View
         style={[
           {
-            //   width: 350,
-            // height: 100,
             flexDirection: "row",
             alignItems: "flex-start",
             paddingHorizontal: horizontalScale(10),
-            marginVertical: verticalScale(10),
+            marginVertical: verticalScale(12),
             paddingVertical: verticalScale(5),
             borderRadius: 5,
             columnGap: horizontalScale(7),
           },
-          shadow(1),
+          // shadow(1),
         ]}
       >
         <Image
           style={{ width: moderateScale(45), aspectRatio: 1 }}
-          source={
-            dataTransaction.picUser
-              ? { uri: dataTransaction.picUser }
-              : require("../assets/images/user.png")
-          }
+          source={require("../assets/images/user.png")}
         />
         <View>
           <View
@@ -62,19 +66,21 @@ const TransactionItem = ({
             <MonoText
               style={{ fontSize: moderateScale(18), fontWeight: "400" }}
             >
-              {dataTransaction.name}
+              {dataTransaction?.receiverName}
             </MonoText>
             <MonoText
               style={[
                 {
-                  backgroundColor: ColorTransaction,
-                  padding: moderateScale(4),
+                  backgroundColor: "#fff",
+                  paddingHorizontal: horizontalScale(5),
                   borderRadius: 5,
-                  borderWidth: 1,
-                  borderColor: "#eee",
+                  marginVertical: verticalScale(2),
+                  color: ColorTransaction,
+                  borderWidth: 0.4,
+                  borderColor: "#aaa",
                   fontWeight: "400",
                 },
-                shadow(5),
+                // shadow(1),
               ]}
             >
               {dataTransaction.status}
@@ -107,7 +113,7 @@ const TransactionItem = ({
               <MonoText
                 style={{ fontSize: moderateScale(16), fontWeight: "600" }}
               >
-                {dataTransaction.montant}
+                {dataTransaction.sum}
               </MonoText>
               <MonoText style={{}}>CFA</MonoText>
             </View>
@@ -118,27 +124,30 @@ const TransactionItem = ({
                 fontSize: moderateScale(12),
               }}
             >
-              {dataTransaction.date}
+              {dataTransaction.createdAt}
             </MonoText>
           </View>
         </View>
       </View>
-    </Pressable>
+    </TouchableOpacity>
   );
 
   function determineStatus(status: string) {
     let ColorTransaction = Colors[colorScheme ?? "light"].text;
     switch (status.replaceAll(" ", "")) {
-      case "inwait":
-        ColorTransaction = "#777";
+      case "start":
+        ColorTransaction = "#a55";
         break;
-      case "inprogress":
-        ColorTransaction = "#ee4";
+      case "run":
+        ColorTransaction = "#a48";
         break;
-      case "success":
+      case "full":
+        ColorTransaction = "#7a4";
+        break;
+      case "end":
         ColorTransaction = "#0f0";
         break;
-      case "fail":
+      case "cancel":
         ColorTransaction = "#e14";
         break;
     }
@@ -146,4 +155,4 @@ const TransactionItem = ({
   }
 };
 
-export default TransactionItem;
+export default memo(TransactionItem);

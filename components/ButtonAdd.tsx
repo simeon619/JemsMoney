@@ -2,6 +2,7 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import React from "react";
 import { Pressable, useColorScheme } from "react-native";
 
+import { useRouter } from "expo-router";
 import Colors from "../constants/Colors";
 import {
   horizontalScale,
@@ -11,8 +12,14 @@ import {
 } from "../fonctionUtilitaire/metrics";
 const ButtonAdd = () => {
   const colorScheme = useColorScheme();
+  let router = useRouter();
   return (
     <Pressable
+      onPress={() => {
+        router.push({
+          pathname: "/formTransaction",
+        });
+      }}
       style={[
         {
           position: "absolute",

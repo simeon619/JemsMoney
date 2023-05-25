@@ -1,5 +1,4 @@
 import { Entypo } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
 import {
@@ -11,6 +10,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { MagicModalPortal, magicModal } from "react-native-magic-modal";
+import { useDispatch } from "react-redux";
 import { valuePassSchema } from "../app/formTransaction";
 import Colors from "../constants/Colors";
 import { CURRENCY_CHANGE } from "../fonctionUtilitaire/data";
@@ -20,10 +20,29 @@ import {
   shadow,
   verticalScale,
 } from "../fonctionUtilitaire/metrics";
+import { AppDispatch } from "../store";
+import { updateTransaction } from "../store/transaction/transactionSlice";
+import ImageRatio from "./ImageRatio";
 import { MonoText } from "./StyledText";
 import { ScrollView, Text, View } from "./Themed";
 
-const ProofPayment = ({ valuePass }: { valuePass: valuePassSchema }) => {
+type imagePrepareShema =
+  | {
+      buffer: string;
+      fileName: string;
+      encoding: "base64";
+      type: string;
+      size: number;
+    }
+  | undefined;
+
+const ProofPayment = ({
+  valuePass,
+  transactionId,
+}: {
+  valuePass: valuePassSchema;
+  transactionId: string;
+}) => {
   const [amount, setAmount] = useState<string>("0");
   const [image, setImage] = useState<string>();
   const [currencyReceiver, setCurrencyReceiver] = useState<string>(
@@ -31,11 +50,13 @@ const ProofPayment = ({ valuePass }: { valuePass: valuePassSchema }) => {
   );
   const [currentCurrency, setCurrentCurrency] = useState<string>("XOF");
   const [change, setChange] = useState<number>(0);
+  const [prepareImage, setPrepareImage] =
+    useState<imagePrepareShema>(undefined);
   const { height, width } = useWindowDimensions();
   const TAUX = 1.5;
   const colorSheme = useColorScheme();
   let montant = parseFloat(amount) * change;
-
+  const dispatch: AppDispatch = useDispatch();
   let taxes = (TAUX * montant) / 100;
 
   // console.log(Object.keys(CURRENCY_CHANGE));
@@ -66,14 +87,39 @@ const ProofPayment = ({ valuePass }: { valuePass: valuePassSchema }) => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       // allowsEditing: true,
-      aspect: [1, 1],
       quality: 1,
+      base64: true,
     });
-
-    console.log({ result });
-
     if (!result.canceled) {
       setImage(result.assets[0].uri);
+      let base64 = result.assets[0].base64;
+
+      let fileName = result.assets[0].uri?.split("/").pop();
+      console.log(
+        "🚀 ~ file: ProofPayment.tsx:97 ~ pickGallery ~ fileName:",
+        fileName
+      );
+      let ext = fileName?.split(".").pop();
+      let type =
+        result.assets[0].type === "image" ? `image/${ext}` : "video/" + ext;
+      console.log(
+        "🚀 ~ file: ProofPayment.tsx:105 ~ pickGallery ~ type:",
+        type
+      );
+      if (base64 && fileName)
+        setPrepareImage({
+          buffer: base64,
+          encoding: "base64",
+          fileName,
+          size: 1500,
+          type,
+        });
+      else {
+        console.log(
+          "🚀 ~ file: ProofPayment.tsx:100 ~ pickGallery ~ else:",
+          prepareImage
+        );
+      }
     }
   };
 
@@ -82,7 +128,7 @@ const ProofPayment = ({ valuePass }: { valuePass: valuePassSchema }) => {
     let result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       // allowsEditing: true,
-      aspect: [1, 1],
+      // aspect: [1, 1],
       quality: 1,
     });
 
@@ -92,6 +138,7 @@ const ProofPayment = ({ valuePass }: { valuePass: valuePassSchema }) => {
       setImage(result.assets[0].uri);
     }
   };
+
   console.log({ image });
 
   const ResponseModal = () => {
@@ -108,7 +155,7 @@ const ProofPayment = ({ valuePass }: { valuePass: valuePassSchema }) => {
       >
         <View>
           <TouchableOpacity
-            onPress={pickImage}
+            onPress={pickGallery}
             style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
           >
             <Entypo
@@ -148,8 +195,26 @@ const ProofPayment = ({ valuePass }: { valuePass: valuePassSchema }) => {
     );
   };
   function sendServer(): void {
-    if (+amount > 1 && !!image) {
-      console.log("image send succeffelu");
+    if (+amount > 1 && !!prepareImage?.buffer) {
+      dispatch(
+        updateTransaction({
+          data: {
+            transacData: {
+              sum: amount,
+              agence: "6464356fbfadd56f766e6f37",
+              country: "6464356fbfadd56f766e6f36",
+              receiverName: "Okou",
+              carte: "2544456985634589",
+              codePromo: "78de",
+              senderFile: [prepareImage],
+              typeTransaction: "carte",
+
+              // typeTransaction: "agence",
+            },
+            transactionId,
+          },
+        })
+      );
     }
   }
 
@@ -316,7 +381,7 @@ const ProofPayment = ({ valuePass }: { valuePass: valuePassSchema }) => {
             </TouchableOpacity>
           </View>
         </View>
-        <View lightColor="#f6f7fb" style={{ marginTop: horizontalScale(25) }}>
+        <View lightColor="#f6f7fb55" style={{ marginTop: horizontalScale(25) }}>
           <Text
             lightColor="#b2c5ca"
             style={{
@@ -328,23 +393,22 @@ const ProofPayment = ({ valuePass }: { valuePass: valuePassSchema }) => {
             Proof payment take screenshot or a photo (optional)
           </Text>
           <View
+            lightColor="#f6f7fb55"
             style={[
               {
                 // flexDirection: "row",
                 alignItems: "center",
                 margin: moderateScale(8),
                 borderRadius: 10,
-                borderWidth: 0.4,
+                // borderWidth: 0.4,
                 borderColor: "#0001",
               },
-              shadow(1),
+              // shadow(1),
               // +amount < 1 && { borderWidth: 0.4, borderColor: "#e42" },
             ]}
           >
             <TouchableOpacity
-              onPress={() => {
-                magicModal.show(() => <ResponseModal />);
-              }}
+              onPress={pickGallery}
               style={{
                 flex: 2.5,
                 justifyContent: "center",
@@ -358,16 +422,7 @@ const ProofPayment = ({ valuePass }: { valuePass: valuePassSchema }) => {
                 color={Colors[colorSheme ?? "light"].text}
               />
             </TouchableOpacity>
-            {image && (
-              <Image
-                contentFit="contain"
-                source={{ uri: image }}
-                style={{
-                  width: width - horizontalScale(60),
-                  aspectRatio: 1.5,
-                }}
-              />
-            )}
+            {image && <ImageRatio uri={image} />}
           </View>
         </View>
         <TouchableOpacity

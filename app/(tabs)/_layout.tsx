@@ -1,13 +1,15 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import Entypo from "@expo/vector-icons/build/Entypo";
 import {
   DrawerContentScrollView,
   DrawerItemList,
   createDrawerNavigator,
 } from "@react-navigation/drawer";
 import { Image } from "expo-image";
-import { Link, useNavigation } from "expo-router";
+import { Link } from "expo-router";
+import { memo } from "react";
 import { Pressable, useColorScheme, useWindowDimensions } from "react-native";
-import Home from ".";
+import { useDispatch, useSelector } from "react-redux";
 import { MonoText } from "../../components/StyledText";
 import { View } from "../../components/Themed";
 import Colors from "../../constants/Colors";
@@ -16,10 +18,12 @@ import {
   moderateScale,
   verticalScale,
 } from "../../fonctionUtilitaire/metrics";
+import { AppDispatch, RootState } from "../../store";
+import { fetchUser } from "../../store/auth/authSlice";
 import EventScreen from "./event";
+import Home from "./index";
 import PreferenceScreen from "./preference";
 import TabTwoScreen from "./two";
-
 export function DrawerItemIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>["name"];
   color: string;
@@ -28,9 +32,11 @@ export function DrawerItemIcon(props: {
 }
 const Drawer = createDrawerNavigator();
 
-function CustomDrawerContent(props: any) {
-  const colorScheme = useColorScheme();
+const CustomDrawerContent = memo((props: any) => {
+  const { account } = useSelector((state: RootState) => state.auth);
   const { height, width } = useWindowDimensions();
+  console.log({ account });
+  const dispatch: AppDispatch = useDispatch();
   return (
     <View lightColor="#0a1845" darkColor="#0a1845" style={{ flex: 1 }}>
       <DrawerContentScrollView
@@ -58,15 +64,40 @@ function CustomDrawerContent(props: any) {
             marginLeft: horizontalScale(10),
           }}
         >
-          Joyca Mitchel
+          {account?.name}
         </MonoText>
         <DrawerItemList {...props} />
       </DrawerContentScrollView>
+      <Pressable
+        style={{
+          position: "absolute",
+          bottom: 10,
+          paddingVertical: verticalScale(10),
+          left: horizontalScale(20),
+          flexDirection: "row",
+          gap: horizontalScale(20),
+        }}
+        onPress={() => {
+          dispatch(
+            fetchUser({ telephone: "+2250565848273", password: "2567" })
+          );
+        }}
+      >
+        <Entypo name="log-out" size={28} color={"#eee"} />
+        <MonoText
+          lightColor="#eee"
+          style={{
+            fontSize: moderateScale(20),
+          }}
+        >
+          Logout
+        </MonoText>
+      </Pressable>
       <MonoText
         lightColor="#eee"
         style={{
           position: "absolute",
-          bottom: 40,
+          bottom: 60,
           left: horizontalScale(20),
           fontSize: moderateScale(20),
         }}
@@ -75,16 +106,11 @@ function CustomDrawerContent(props: any) {
       </MonoText>
     </View>
   );
-}
+});
 
 export default function DrawerLayout() {
   const colorScheme = useColorScheme();
-  const navigation = useNavigation();
 
-  /*   navigation.
-  const handleShowModal = (show : boolean) => {
-    navigation.navigate('index', { showModal: show });
-  }; */
   return (
     <Drawer.Navigator
       drawerContent={(props: any) => {
@@ -101,7 +127,8 @@ export default function DrawerLayout() {
         name="index"
         component={Home}
         options={{
-          title: "Home",
+          title: "home",
+          headerTitle: "",
           drawerIcon: ({ color }) => (
             <DrawerItemIcon name="home" color={color} />
           ),

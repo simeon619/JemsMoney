@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Pressable, useColorScheme, useWindowDimensions } from "react-native";
 import PagerView from "react-native-pager-view";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useSelector } from "react-redux";
 import Contact from "../components/Contact";
 import ProofPayment from "../components/ProofPayment";
 import { Text, View } from "../components/Themed";
@@ -17,6 +18,7 @@ import {
   shadow,
   verticalScale,
 } from "../fonctionUtilitaire/metrics";
+import { RootState } from "../store";
 import { ContactShema } from "./modal";
 export type valuePassSchema = {
   pays: string;
@@ -31,6 +33,7 @@ const makeTransaction = () => {
   const { height, width } = useWindowDimensions();
   const [user, setUser] = useState<any>(null);
   const [disabledScroll, setDisabledScroll] = useState(false);
+
   const [valuePass, setValuePass] = useState<valuePassSchema>({
     agence: "",
     pays: "",
@@ -40,6 +43,18 @@ const makeTransaction = () => {
   const [page, setPage] = useState(0);
   const colorScheme = useColorScheme();
   const params = useSearchParams();
+  const { start } = useSelector((state: RootState) => state.transation);
+  console.log(
+    "🚀 ~ file: formTransaction.tsx:47 ~ makeTransaction ~ start:",
+    start
+  );
+
+  let transactionId = Object.keys(start)[1];
+  console.log(
+    "🚀 ~ file: formTransaction.tsx:49 ~ makeTransaction ~ transactionId:",
+    transactionId
+  );
+
   let router = useRouter();
   // const contact : ContactShema = params
   let infoUserReceiver: ContactShema;
@@ -180,12 +195,18 @@ const makeTransaction = () => {
             <Contact
               key={1}
               user={user}
+              transactionId={transactionId}
               changeTOProofPayment={changeTOProofPayment}
             />
           ) : (
             <View key={1}></View>
           )}
-          <ProofPayment valuePass={valuePass} key={2} />
+
+          <ProofPayment
+            transactionId={transactionId}
+            valuePass={valuePass}
+            key={2}
+          />
         </PagerView>
         <StatusBar style="dark" backgroundColor="#f7f8fc" />
       </View>

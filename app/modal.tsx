@@ -22,8 +22,9 @@ import {
   shadow,
   verticalScale,
 } from "../fonctionUtilitaire/metrics";
+import { AppDispatch, RootState } from "../store";
 import { fetchContacts } from "../store/contact/fetchhContact";
-import { RootState } from "../store/store";
+import { startTransaction } from "../store/transaction/transactionSlice";
 
 export type ContactShema = {
   id: string;
@@ -36,14 +37,14 @@ export default function ModalScreen() {
   const [value, onChangeText] = useState("");
   const colorScheme = useColorScheme();
   let router = useRouter();
-  let dispatch = useDispatch();
+  let dispatch: AppDispatch = useDispatch();
   let listContact = useSelector((state: RootState) => state.contact);
 
   useEffect(() => {
     fetchContacts(listContact, dispatch);
   }, []);
   const contactFind = useMemo(() => {
-    return listContact?.contact.filter((contact) => {
+    return listContact?.filter((contact) => {
       const searchTextLowerCase = value?.toLowerCase();
 
       return (
@@ -58,55 +59,58 @@ export default function ModalScreen() {
 
   // console.log(contactFind.phoneNumbers[0].number, "dagobert");
 
-  const ContactItem = React.memo<ContactShema>((contact) => (
-    <TouchableOpacity
-      style={[
-        {
-          flexDirection: "row",
-          alignItems: "center",
-          paddingVertical: verticalScale(5),
-          gap: horizontalScale(7),
-          paddingLeft: horizontalScale(15),
-        },
-        shadow(0),
-      ]}
-      onPress={() => {
-        router.push({
-          pathname: "/formTransaction",
-          params: {
-            name: contact.name,
-            id: contact.id,
-            number: contact.phoneNumbers[0].number,
+  const ContactItem = React.memo<ContactShema>((contact) => {
+    return (
+      <TouchableOpacity
+        style={[
+          {
+            flexDirection: "row",
+            alignItems: "center",
+            paddingVertical: verticalScale(5),
+            gap: horizontalScale(7),
+            paddingLeft: horizontalScale(15),
           },
-        });
-      }}
-    >
-      <Image
-        style={{ width: moderateScale(40), aspectRatio: 1 }}
-        source={require("../assets/images/user.png")}
-      />
-      <View>
-        <Text
-          style={{
-            fontWeight: "900",
-            fontSize: moderateScale(18),
-            width: width - horizontalScale(90),
-          }}
-        >
-          {contact.name}
-        </Text>
-        <Text
-          style={{
-            fontWeight: "200",
-            fontSize: moderateScale(18),
-            width: width - horizontalScale(90),
-          }}
-        >
-          {contact.phoneNumbers[0].number}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  ));
+          shadow(0),
+        ]}
+        onPress={() => {
+          dispatch(startTransaction());
+          router.push({
+            pathname: "/formTransaction",
+            params: {
+              name: contact.name,
+              id: contact.id,
+              number: contact.phoneNumbers[0].number,
+            },
+          });
+        }}
+      >
+        <Image
+          style={{ width: moderateScale(40), aspectRatio: 1 }}
+          source={require("../assets/images/user.png")}
+        />
+        <View>
+          <Text
+            style={{
+              fontWeight: "900",
+              fontSize: moderateScale(18),
+              width: width - horizontalScale(90),
+            }}
+          >
+            {contact.name}
+          </Text>
+          <Text
+            style={{
+              fontWeight: "200",
+              fontSize: moderateScale(18),
+              width: width - horizontalScale(90),
+            }}
+          >
+            {contact.phoneNumbers[0].number}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  });
   return (
     <SafeAreaView style={styles.container}>
       <View
@@ -171,7 +175,7 @@ export default function ModalScreen() {
         // ]}
         style={{ backgroundColor: "#fff" }}
         ListFooterComponent={
-          <View style={{ height: verticalScale(80), width }}></View>
+          <View style={{ height: verticalScale(80), width }} />
         }
         // keyboardShouldPersistTaps={true}
         // scrollToOverflowEnabled={true}

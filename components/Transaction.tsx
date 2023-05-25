@@ -1,15 +1,17 @@
 import React from "react";
 import { useWindowDimensions } from "react-native";
-import { dataTransactions } from "../fonctionUtilitaire/data";
-import {
-  moderateScale,
-  shadow,
-  verticalScale,
-} from "../fonctionUtilitaire/metrics";
+import { useSelector } from "react-redux";
+import { moderateScale, shadow } from "../fonctionUtilitaire/metrics";
+import { RootState } from "../store";
 import { MonoText } from "./StyledText";
 import { ScrollView, View } from "./Themed";
 import TransactionItem from "./TransactionItem";
 const Transaction = () => {
+  const { cancel, end, full, run, start, fetchLoading, fetchSuccess } =
+    useSelector((state: RootState) => state.transation);
+
+  console.log(Object.values(cancel), "FRTR");
+
   const { height, width } = useWindowDimensions();
   return (
     <View style={[{ flex: 1, borderRadius: moderateScale(30) }, shadow(5)]}>
@@ -18,7 +20,7 @@ const Transaction = () => {
           padding: moderateScale(15),
           fontSize: moderateScale(25),
           fontWeight: "600",
-          marginBottom: verticalScale(10),
+          // marginBottom: verticalScale(5),
         }}
       >
         Transaction
@@ -29,9 +31,26 @@ const Transaction = () => {
         contentContainerStyle={{ alignItems: "center" }}
         pagingEnabled={true}
       >
-        {dataTransactions.map((item, index) => (
-          <TransactionItem key={index} dataTransaction={item} />
-        ))}
+        {Object.values(start).map((item, index) => {
+          if (item.status)
+            return <TransactionItem key={index} dataTransaction={item} />;
+        })}
+        {Object.values(full).map((item, index) => {
+          if (item.status)
+            return <TransactionItem key={index} dataTransaction={item} />;
+        })}
+        {Object.values(run).map((item, index) => {
+          if (item.status)
+            return <TransactionItem key={index} dataTransaction={item} />;
+        })}
+        {Object.values(end).map((item, index) => {
+          if (item.status)
+            return <TransactionItem key={index} dataTransaction={item} />;
+        })}
+        {Object.values(cancel).map((item, index) => {
+          if (item.status)
+            return <TransactionItem key={index} dataTransaction={item} />;
+        })}
       </ScrollView>
     </View>
   );

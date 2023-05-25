@@ -16,14 +16,18 @@ import {
 import { Entypo } from "@expo/vector-icons";
 import phone from "phone";
 import { MagicModalPortal, magicModal } from "react-native-magic-modal";
+import { useDispatch } from "react-redux";
 import Colors from "../constants/Colors";
 import { AGENCE, normeFormat } from "../fonctionUtilitaire/data";
+import { AppDispatch } from "../store";
+import { updateTransaction } from "../store/transaction/transactionSlice";
 import { MonoText } from "./StyledText";
 import { ScrollView, Text, View } from "./Themed";
 
 const Contact = ({
   user,
   changeTOProofPayment,
+  transactionId,
 }: {
   user: {
     isValid: boolean;
@@ -33,6 +37,7 @@ const Contact = ({
     number: string;
   };
   changeTOProofPayment: (infoPay: any) => void;
+  transactionId: string;
 }) => {
   const colorSheme = useColorScheme();
   const [pays, setPays] = useState<"RU" | "CI" | "CM" | "TG" | "BE" | "">(
@@ -46,6 +51,7 @@ const Contact = ({
 
   const [name, setName] = useState<string>(user?.name);
   const [valid, setValid] = useState<boolean>(user?.isValid);
+
   const [cardSb, setCardSb] = useState<string>("");
   const [service, setService] = useState<string[]>([]);
   const [agence, setAgence] = useState("");
@@ -67,7 +73,7 @@ const Contact = ({
     }
     return number;
   });
-
+  const dispatch: AppDispatch = useDispatch();
   useEffect(() => {
     let validnumber = "+" + normeFormat[pays]?.indicatif + number;
     let resultPhone = phone(validnumber, { country: undefined });
@@ -91,7 +97,6 @@ const Contact = ({
   const ServiceModal = () => {
     const renderItem = ({ item }: { item: any }) => {
       //@ts-ignore
-      // const { name, digit, indicatif, flag } = service[item];
       return (
         <TouchableOpacity
           onPress={() => {
@@ -199,6 +204,31 @@ const Contact = ({
         agence,
         currency: normeFormat[pays].currency,
       });
+      dispatch(
+        updateTransaction({
+          data: {
+            transacData: {
+              telephone: realNumber,
+              sum: "200",
+              agence: "6464356fbfadd56f766e6f37",
+              country: "6464356fbfadd56f766e6f36",
+              receiverName: "Okou",
+              carte: "2544456985634589",
+              codePromo: "78de",
+              senderFile: undefined,
+              typeTransaction: "carte",
+
+              // typeTransaction: "agence",
+            },
+            transactionId,
+          },
+        })
+      );
+      console.log(
+        "🚀 ~ file: Contact.tsx:218 ~ verifyAndNext ~ transactionId:",
+        transactionId
+      );
+
       console.log({ pays, valid, agence, realNumber });
     }
   }
@@ -251,6 +281,7 @@ const Contact = ({
               </TouchableOpacity>
               <TextInput
                 // maxLength={10}
+                placeholder="full name"
                 value={name}
                 onChangeText={(txt) => setName(txt)}
                 keyboardType="name-phone-pad"
@@ -319,6 +350,7 @@ const Contact = ({
               <TextInput
                 maxLength={parseInt(normeFormat[pays]?.digit) || 0}
                 value={number}
+                placeholder="0565848273"
                 onChangeText={(txt) => {
                   setNumber(txt);
                 }}
@@ -393,7 +425,7 @@ const Contact = ({
                       paddingRight: horizontalScale(5),
                     }}
                   >
-                    SIBER BANK
+                    SBERBANK
                   </Text>
                 </TouchableOpacity>
                 <TextInput
