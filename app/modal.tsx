@@ -77,6 +77,7 @@ export default function ModalScreen() {
           router.push({
             pathname: "/formTransaction",
             params: {
+              type: "contact",
               name: contact.name,
               id: contact.id,
               number: contact.phoneNumbers[0].number,

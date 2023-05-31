@@ -67,7 +67,7 @@ const DetailTransaction = () => {
             {params.name}
           </MonoText>
         </View>
-        <ItemStatus title="Amount received" label={params.montant + " CFA"} />
+        <ItemStatus title="Amount received" label={params.sum + " CFA"} />
         <ItemStatus title="Fee" label={"250" + " CFA"} />
         <ItemStatus title="Status" label={params.status} />
         <ItemStatus title="Date et heure" label={params.date} />

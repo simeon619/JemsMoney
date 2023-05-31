@@ -10,7 +10,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { View } from "../components/Themed";
 import Colors from "../constants/Colors";
-import { HOST } from "../constants/Network";
+import { HOST } from "../constants/data";
 import { horizontalScale, moderateScale } from "../fonctionUtilitaire/metrics";
 import { MonoText } from "./StyledText";
 const InstanceAudio = ({ voiceUrl }: { voiceUrl: any }) => {

@@ -9,14 +9,14 @@ import { SplashScreen, Stack } from "expo-router";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";
 //@ts-ignore
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MagicModalPortal } from "react-native-magic-modal";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 import { Provider } from "react-redux";
 import { persistStore } from "redux-persist";
 import { PersistGate } from "redux-persist/integration/react";
 import { Text } from "../components/Themed";
-
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import SQuery from "../lib/SQueryClient";
 import { store } from "../store";
 export { ErrorBoundary } from "expo-router";
@@ -27,6 +27,10 @@ export const unstable_settingss = {
 let persistor = persistStore(store);
 
 export const PURGE_ALL_DATA = async () => {
+  console.log(
+    "🚀 ~ file: _layout.tsx:30 ~ constPURGE_ALL_DATA= ~ PURGE_ALL_DATA:",
+    PURGE_ALL_DATA
+  );
   persistor.pause();
   persistor.flush().then(() => {
     return persistor.purge();
@@ -89,6 +93,7 @@ function RootLayoutNav({ style }: any) {
         >
           <SafeAreaProvider>
             <MagicModalPortal />
+
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen
@@ -120,7 +125,7 @@ function RootLayoutNav({ style }: any) {
                 options={{
                   presentation: "modal",
                   headerShown: false,
-                  animation: "slide_from_bottom",
+                  animation: "flip",
                 }}
               />
               <Stack.Screen
@@ -154,6 +159,7 @@ function RootLayoutNav({ style }: any) {
                 }}
               />
             </Stack>
+            <Toast />
           </SafeAreaProvider>
         </PersistGate>
       </Provider>

@@ -18,24 +18,4 @@ if (!firebase.app.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-export const persistanceSquery = () => {
-  SQuery.dataStore = {
-    useStore: false,
-    updateTimeOut: 500,
-    setData: async (key, data) => {
-      try {
-        AsyncStorage.setItem(key, JSON.stringify(data));
-      } catch (error) {
-        console.error(error);
-      }
-    },
-    getData: async (key) => {
-      try {
-        return JSON.parse((await AsyncStorage.getItem(key)) || "");
-      } catch (error) {
-        console.error(error);
-        return null;
-      }
-    },
-  };
-};
+;

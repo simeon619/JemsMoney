@@ -18,7 +18,6 @@ import React, {
 import {
   Alert,
   FlatList,
-  ImageBackground,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -43,7 +42,7 @@ import InstanceAudio from "../components/InstanceAudio";
 import { MonoText } from "../components/StyledText";
 import { View } from "../components/Themed";
 import Colors from "../constants/Colors";
-import { HOST } from "../constants/Network";
+import { HOST } from "../constants/data";
 import {
   horizontalScale,
   moderateScale,
@@ -51,7 +50,7 @@ import {
 } from "../fonctionUtilitaire/metrics";
 import { AppDispatch, RootState } from "../store";
 import {
-  MessageSchema,
+  MessageDataSchema,
   addMessage,
   fetchMessages,
 } from "../store/message/messageSlice";
@@ -79,17 +78,21 @@ const discussion = () => {
   const dispatch: AppDispatch = useDispatch();
   const id = params.id as string;
 
-  const Messsages = useSelector((state: RootState) => state.message);
+  const Messages = useSelector((state: RootState) => state.message);
+  console.log(
+    "🚀 ~ file: discussion.tsx:83 ~ discussion ~ Messsages:",
+    Messages
+  );
 
-  useEffect(() => {
-    if (!(Messsages[id]?.loading || Messsages[id]?.success)) {
-      Messsages[id] = {
-        messages: [],
-        loading: false,
-        success: false,
-      };
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (!Messages[id] && Messages[id]?.messages) {
+  //     Messages[id] = {
+  //       messages: {},
+  //       loading: false,
+  //       success: false,
+  //     };
+  //   }
+  // }, []);
 
   const regex = new RegExp(/[^\s\r\n]/g);
 
@@ -335,12 +338,9 @@ const discussion = () => {
   }
 
   return (
-    <ImageBackground
-      source={require("../assets/images/splash.png")}
-      style={{ flex: 1, marginTop: StatusBar.currentHeight }}
-    >
+    <View style={{ flex: 1, marginTop: StatusBar.currentHeight }}>
       <StatusBar
-        backgroundColor={Colors[colorSheme ?? "light"].primaryColour}
+        backgroundColor={Colors[colorSheme ?? "light"].secondaryColour}
         barStyle={"light-content"}
       />
       <KeyboardAvoidingView
@@ -358,7 +358,7 @@ const discussion = () => {
             width,
             // position: 'absolute',
             // top: 0,
-            backgroundColor: Colors[colorSheme ?? "light"].primaryColour,
+            backgroundColor: Colors[colorSheme ?? "light"].secondaryColour,
             zIndex: 999,
           }}
         >
@@ -366,7 +366,7 @@ const discussion = () => {
             style={{
               flexDirection: "row",
               gap: 5,
-              backgroundColor: Colors[colorSheme ?? "light"].primaryColour,
+              backgroundColor: Colors[colorSheme ?? "light"].secondaryColour,
             }}
           >
             <View
@@ -375,7 +375,7 @@ const discussion = () => {
                 paddingVertical: verticalScale(6),
                 gap: 5,
                 paddingLeft: horizontalScale(5),
-                backgroundColor: Colors[colorSheme ?? "light"].primaryColour,
+                backgroundColor: Colors[colorSheme ?? "light"].secondaryColour,
               }}
             >
               <Pressable
@@ -410,7 +410,7 @@ const discussion = () => {
               style={{
                 justifyContent: "center",
                 gap: 2,
-                backgroundColor: Colors[colorSheme ?? "light"].primaryColour,
+                backgroundColor: Colors[colorSheme ?? "light"].secondaryColour,
               }}
             >
               <MonoText
@@ -429,7 +429,7 @@ const discussion = () => {
           <View
             style={{
               flexDirection: "row",
-              backgroundColor: Colors[colorSheme ?? "light"].primaryColour,
+              backgroundColor: Colors[colorSheme ?? "light"].secondaryColour,
               alignItems: "center",
               gap: horizontalScale(25),
               marginRight: horizontalScale(15),
@@ -442,16 +442,16 @@ const discussion = () => {
             />
           </View>
         </View>
-
+        {/* 
         <FlatList
-          data={Messsages[id]?.messages}
+          data={Object.values(Messages[id]?.messages)}
           renderItem={({ item }) => <MessageItem item={item} />}
           keyExtractor={(item) => item.messageId}
           // onScroll={handleScroll}
           keyboardShouldPersistTaps="always"
           contentContainerStyle={{
             flexGrow: 1,
-            backgroundColor: "#eee",
+            backgroundColor: "#fff",
             justifyContent: "flex-end",
             marginBottom: verticalScale(150),
           }}
@@ -466,11 +466,11 @@ const discussion = () => {
             <View
               style={{
                 height: verticalScale(60),
-                backgroundColor: "#0000",
+                backgroundColor: "#fff",
               }}
             />
           )}
-        />
+        /> */}
         <View
           style={{
             flexDirection: "row",
@@ -482,7 +482,7 @@ const discussion = () => {
             paddingBottom: verticalScale(10),
             bottom: 0,
             flex: 1,
-            backgroundColor: Colors[colorSheme ?? "light"].primaryColour,
+            backgroundColor: Colors[colorSheme ?? "light"].secondaryColour,
           }}
         >
           {duration > 0 ? (
@@ -516,7 +516,8 @@ const discussion = () => {
                   flexDirection: "row",
                   alignItems: "baseline",
                   gap: horizontalScale(15),
-                  backgroundColor: Colors[colorSheme ?? "light"].primaryColour,
+                  backgroundColor:
+                    Colors[colorSheme ?? "light"].secondaryColour,
                 }}
               >
                 <MonoText
@@ -524,7 +525,7 @@ const discussion = () => {
                     fontSize: moderateScale(17),
                     color: Colors[colorSheme ?? "light"].textOverlay,
                     backgroundColor:
-                      Colors[colorSheme ?? "light"].primaryColour,
+                      Colors[colorSheme ?? "light"].secondaryColour,
                   }}
                 >
                   {formatDuration(duration)}
@@ -534,7 +535,7 @@ const discussion = () => {
                     fontSize: moderateScale(14),
                     color: Colors[colorSheme ?? "light"].textOverlay,
                     backgroundColor:
-                      Colors[colorSheme ?? "light"].primaryColour,
+                      Colors[colorSheme ?? "light"].secondaryColour,
                   }}
                 >
                   Slide to send
@@ -566,7 +567,7 @@ const discussion = () => {
               flexDirection: "row",
               flex: 3,
               justifyContent: "space-between",
-              backgroundColor: Colors[colorSheme ?? "light"].primaryColour,
+              backgroundColor: Colors[colorSheme ?? "light"].secondaryColour,
               marginRight: horizontalScale(5),
             }}
           >
@@ -589,7 +590,7 @@ const discussion = () => {
             )}
             <View
               style={{
-                backgroundColor: Colors[colorSheme ?? "light"].primaryColour,
+                backgroundColor: Colors[colorSheme ?? "light"].secondaryColour,
               }}
             >
               {text && regex.test(text) ? (
@@ -662,10 +663,10 @@ const discussion = () => {
           </View>
         </View>
       </KeyboardAvoidingView>
-    </ImageBackground>
+    </View>
   );
 };
-const MessageItem = memo(({ item }: { item: MessageSchema }) => {
+const MessageItem = memo(({ item }: { item: MessageDataSchema }) => {
   console.log({ item });
 
   return (
@@ -735,7 +736,7 @@ const MessageItem = memo(({ item }: { item: MessageSchema }) => {
             if (type === "image")
               return (
                 // <View key={i}></View>
-                <ImageRatio uri={HOST + file} key={i} />
+                <ImageRatio uri={HOST + file} key={i} ratio={2} />
                 // <Image
                 //   key={file}
                 //   contentFit="contain"

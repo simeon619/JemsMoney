@@ -46,7 +46,7 @@ async function createDisc(id: string) {
   }
 }
 
-export const fetchDiscussions = createAsyncThunk(
+const fetchDiscussions = createAsyncThunk(
   "discussion/fetch",
   async (data: { idMessennger: string }, thunkAPI) => {
     try {
@@ -158,7 +158,6 @@ export const discussionSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(fetchDiscussions.pending, (state) => {
       state.loading = true;
-      console.log("pending", state);
     });
     builder.addCase(fetchDiscussions.fulfilled, (state, action) => {
       const { close, open } = action.payload as any as {
@@ -178,13 +177,10 @@ export const discussionSlice = createSlice({
       }
       state.isSuccess = true;
       state.loading = false;
-
-      console.log("fulfilled", action);
     });
     builder.addCase(fetchDiscussions.rejected, (state) => {
       state.isSuccess = false;
       state.loading = false;
-      console.log("rejected", state);
     });
     builder.addCase(PURGE, () => initialState);
   },

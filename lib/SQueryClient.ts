@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
-import { HOST } from "../constants/Network";
+import { HOST } from "../constants/data";
 import {
   getMyStringValue,
   removeValue,

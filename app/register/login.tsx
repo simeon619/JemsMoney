@@ -124,7 +124,7 @@ const login = () => {
       return true;
     }
     return false;
-  }, [inputTelUser, password]);
+  }, [validTel, password]);
 
   const logIn = () => {
     dispatch(fetchUser({ telephone: phoneNumber, password }));

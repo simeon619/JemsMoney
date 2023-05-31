@@ -6,7 +6,7 @@ import {
   createDrawerNavigator,
 } from "@react-navigation/drawer";
 import { Image } from "expo-image";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { memo } from "react";
 import { Pressable, useColorScheme, useWindowDimensions } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,8 +18,10 @@ import {
   moderateScale,
   verticalScale,
 } from "../../fonctionUtilitaire/metrics";
-import { AppDispatch, RootState } from "../../store";
 import { fetchUser } from "../../store/auth/authSlice";
+
+import { AntDesign } from "@expo/vector-icons";
+import { AppDispatch, RootState } from "../../store";
 import EventScreen from "./event";
 import Home from "./index";
 import PreferenceScreen from "./preference";
@@ -38,7 +40,7 @@ const CustomDrawerContent = memo((props: any) => {
   console.log({ account });
   const dispatch: AppDispatch = useDispatch();
   return (
-    <View lightColor="#0a1845" darkColor="#0a1845" style={{ flex: 1 }}>
+    <View lightColor="#21263a" darkColor="#21263a" style={{ flex: 1 }}>
       <DrawerContentScrollView
         style={{ margin: horizontalScale(20), height }}
         {...props}
@@ -110,7 +112,7 @@ const CustomDrawerContent = memo((props: any) => {
 
 export default function DrawerLayout() {
   const colorScheme = useColorScheme();
-
+  let router = useRouter();
   return (
     <Drawer.Navigator
       drawerContent={(props: any) => {
@@ -134,35 +136,32 @@ export default function DrawerLayout() {
           ),
           drawerItemStyle: { marginTop: verticalScale(35) },
           headerRight: () => (
-            <View darkColor="#0001" style={{ flexDirection: "row", gap: 15 }}>
-              <Link href="/modal" asChild>
-                <Pressable>
-                  {({ pressed }) => (
-                    <FontAwesome
-                      name="search"
-                      size={22}
-                      color={Colors[colorScheme ?? "light"].iconGrey}
-                      style={{ marginRight: 5, opacity: pressed ? 0.5 : 1 }}
-                    />
-                  )}
-                </Pressable>
-              </Link>
-              <Link
-                href={{ pathname: "/messagerie", params: { showModal: true } }}
-                asChild
+            <Pressable
+              style={{
+                flexDirection: "row",
+                gap: 5,
+                alignItems: "center",
+              }}
+              onPress={() => {
+                router.push("/modal");
+              }}
+            >
+              <MonoText
+                style={{
+                  color: Colors[colorScheme ?? "light"].text,
+                  fontSize: moderateScale(16),
+                }}
               >
-                <Pressable>
-                  {({ pressed }) => (
-                    <FontAwesome
-                      name="comments"
-                      size={26}
-                      color={Colors[colorScheme ?? "light"].iconGrey}
-                      style={{ marginRight: 20, opacity: pressed ? 0.5 : 1 }}
-                    />
-                  )}
-                </Pressable>
-              </Link>
-            </View>
+                Find contact
+              </MonoText>
+
+              <AntDesign
+                name="contacts"
+                size={28}
+                color={Colors[colorScheme ?? "light"].text}
+                style={{ marginRight: 25 }}
+              />
+            </Pressable>
           ),
         }}
       />

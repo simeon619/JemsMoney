@@ -17,6 +17,8 @@ import {
 } from "redux-persist";
 import authSlice from "./auth/authSlice";
 import contactSlice from "./contact/contactSlice";
+import countrySlice from "./country/countrySlice";
+import entrepriseSlice from "./entreprise/entrepriseSlice";
 import messageSlice from "./message/messageSlice";
 import discussionSlice from "./messagerie/messagerieSlice";
 import transactionSlice from "./transaction/transactionSlice";
@@ -38,7 +40,6 @@ export function purgeDiscussion() {
   // purgeStoredState({storage: AsyncStorage ,key : ''});
   purgeStoredState({ ...persistConfig, key: "discussion" });
 }
-
 export function purgeContact() {
   purgeStoredState({ ...persistConfig, key: "contact" });
 }
@@ -51,6 +52,8 @@ const rootReducer = combineReducers({
   discussion: discussionSlice,
   message: messageSlice,
   transation: transactionSlice,
+  country: countrySlice,
+  entreprise: entrepriseSlice,
 });
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 export const store = configureStore({

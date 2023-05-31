@@ -69,10 +69,10 @@ const Bilan = () => {
               }}
             >
               <MonoText
+                lightColor="#444"
                 style={{
                   fontSize: moderateScale(28),
                   fontWeight: "600",
-                  color: "#aaa",
                 }}
               >
                 {item.title}

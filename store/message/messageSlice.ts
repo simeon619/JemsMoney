@@ -1,21 +1,31 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "..";
 import SQuery from "../../lib/SQueryClient";
-export type MessageSchema = {
+
+export type MessageDataSchema = {
   text: string;
   right: boolean;
-  date: any;
+  createdAt: any;
   files: string[];
   messageId: string;
+};
+export type MessageSchema = {
+  [messageId: string]: {
+    text: string;
+    right: boolean;
+    createdAt: any;
+    files: string[];
+    messageId: string;
+  };
 };
 
 const initialState: {
   [DiscussionId: string]: {
-    messages: MessageSchema[];
+    messages: MessageSchema;
     loading: boolean;
     success: boolean;
   };
-} = { "": { messages: [], loading: false, success: false } };
+} = { "": { messages: {}, loading: false, success: false } };
 const createMessage = async (id: string, accountId: any) => {
   return new Promise(async (res) => {
     let messageModel = await SQuery.model("message");
@@ -131,13 +141,22 @@ export const messageSlice = createSlice({
       if (!!!(action.payload as any)) {
         return;
       }
-      const { messages, discussionId } = action.payload as any;
-      if (messages)
-        state[discussionId].messages =
-          state[discussionId].messages.concat(messages);
-      state[discussionId].loading = false;
-      state[discussionId].success = true;
 
+      const { messages, discussionId } = action.payload as any;
+      const discussion = state[discussionId];
+
+      if (messages && discussion) {
+        const updatedMessages = { ...discussion.messages };
+        messages.forEach((message: any) => {
+          updatedMessages[message.messageId] = message;
+        });
+        state[discussionId] = {
+          ...discussion,
+          messages: updatedMessages,
+          loading: false,
+          success: true,
+        };
+      }
       console.log("fulfilled", state);
     },
   },
@@ -148,60 +167,63 @@ export const messageSlice = createSlice({
         return;
       }
       const { messages, discussionId } = action.payload as any;
-      console.log("fulfilled1", { messages, discussionId });
-      if (messages && discussionId) {
-        if (!!!state[discussionId]?.messages) {
-          state[discussionId] = {
-            messages: [],
-            loading: false,
-            success: false,
-          };
-        }
-        state[discussionId].messages =
-          state[discussionId].messages.concat(messages);
-        state[discussionId].loading = false;
-        state[discussionId].success = true;
+      const discussion = state[discussionId];
+
+      if (messages && discussion) {
+        const updatedMessages = { ...discussion.messages };
+        messages.forEach((message: any) => {
+          updatedMessages[message.messageId] = message;
+        });
+
+        state[discussionId] = {
+          ...discussion,
+          messages: updatedMessages,
+          loading: false,
+          success: true,
+        };
       }
 
-      console.log("fulfilled", state);
+      console.log("fulfilled:fetchMessages");
     });
     builder.addCase(fetchMessages.pending, (state, action) => {
-      console.log(action.payload as any, "pending54");
-
       if (!!!(action.payload as any)) {
         return;
       }
       const { discussionId } = action.payload as any;
-      if (!state[discussionId]?.messages) {
+      const discussion = state[discussionId];
+
+      if (!discussion || !discussion.messages) {
         state[discussionId] = {
-          messages: [],
-          loading: false,
+          messages: {},
+          loading: true,
           success: false,
         };
+      } else {
+        discussion.loading = true;
+        discussion.success = false;
       }
-      console.log("pending5622e", state);
-      state[discussionId].loading = true;
-      state[discussionId].success = false;
-      console.log("pending5555", state);
+      console.log("pending5555:fetchMessages");
     });
     builder.addCase(fetchMessages.rejected, (state, action) => {
-      console.log(action.payload as any, "874");
       if (!!!(action.payload as any)) {
         return;
       }
       const { discussionId } = action.payload as any;
-      console.log(!!state[discussionId]?.messages, "77");
-      if (!state[discussionId]?.messages) {
+
+      const discussion = state[discussionId];
+
+      if (!discussion || !discussion.messages) {
         state[discussionId] = {
-          messages: [],
+          messages: {},
           loading: false,
           success: false,
         };
-        console.log({ state });
+      } else {
+        discussion.loading = false;
+        discussion.success = false;
+        discussion.success = false;
       }
-      state[discussionId].loading = false;
-      state[discussionId].success = false;
-      console.log("rejected", state);
+      console.log("rejected:fetchMessages");
     });
   },
 });

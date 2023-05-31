@@ -132,19 +132,19 @@ const handleAsyncAction = (
   builder.addCase(asyncAction.pending, (state) => {
     state.loading = true;
     state.isAuthenticated = false;
-    console.log("pending", state);
+    console.log("pending:asyncAction");
   });
   builder.addCase(asyncAction.fulfilled, (state, action) => {
     state.isAuthenticated = true;
     state.loading = false;
     state.account = (action.payload as any)?.account;
     state.user = (action.payload as any)?.user;
-    console.log("fulfilled", action);
+    console.log("fulfilled:asyncAction", state);
   });
   builder.addCase(asyncAction.rejected, (state) => {
     state.isAuthenticated = false;
     state.loading = false;
-    console.log("rejected", state);
+    console.log("rejected:asyncAction");
   });
 };
 

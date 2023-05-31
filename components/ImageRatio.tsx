@@ -2,7 +2,13 @@ import * as FileSystem from "expo-file-system";
 import { Image, ImageLoadEventData } from "expo-image";
 import React, { useEffect, useState } from "react";
 import { useWindowDimensions } from "react-native";
-const ImageRatio = ({ uri }: { uri: string }) => {
+const ImageRatio = ({
+  uri,
+  ratio,
+}: {
+  uri: string | undefined;
+  ratio: number;
+}) => {
   const [aspectRatio, setAspectRatio] = useState(2 / 3);
   const [imagePath, setImagePath] = useState<string>("");
   const { height, width } = useWindowDimensions();
@@ -14,18 +20,18 @@ const ImageRatio = ({ uri }: { uri: string }) => {
   const blurhash =
     "|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[";
   const imageSource = { uri };
-  console.log(imageSource);
+
   useEffect(() => {
     const fetchImage = async () => {
-      const response = await fetch(uri);
-      const base64String = await response.text();
+      // const response = await fetch(uri);
+      // const base64String = await response.text();
       // console.log({ base64String });
 
-      let ext = uri.split(".").pop();
+      let ext = uri?.split(".").pop();
       let path = FileSystem.documentDirectory + `image-${Date.now()}.${ext}`;
-      await FileSystem.writeAsStringAsync(path, base64String, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+      // await FileSystem.writeAsStringAsync(path, base64String, {
+      //   encoding: FileSystem.EncodingType.Base64,
+      // });
 
       setImagePath(path);
       console.log("Write SUCCEFELY2");
@@ -42,7 +48,7 @@ const ImageRatio = ({ uri }: { uri: string }) => {
           source={imageSource}
           style={{
             width: "100%",
-            maxHeight: height / 2,
+            maxHeight: height / ratio,
             aspectRatio: aspectRatio !== null ? aspectRatio : 2 / 3,
           }}
           onLoad={handleImageLoad}

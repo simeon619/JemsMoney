@@ -8,7 +8,17 @@ import { Pressable, useColorScheme, useWindowDimensions } from "react-native";
 import PagerView from "react-native-pager-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSelector } from "react-redux";
+import ButtonAdd from "../components/ButtonAdd";
 import Contact from "../components/Contact";
+
+import {
+  Easing,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import FinalPayment from "../components/FinalPayment";
 import ProofPayment from "../components/ProofPayment";
 import { Text, View } from "../components/Themed";
 import Colors from "../constants/Colors";
@@ -18,8 +28,9 @@ import {
   shadow,
   verticalScale,
 } from "../fonctionUtilitaire/metrics";
+import { TransactionServer } from "../fonctionUtilitaire/type";
 import { RootState } from "../store";
-import { ContactShema } from "./modal";
+import { Agency } from "../store/country/countrySlice";
 export type valuePassSchema = {
   pays: string;
   valid: boolean;
@@ -28,36 +39,58 @@ export type valuePassSchema = {
 };
 const makeTransaction = () => {
   let phoneUtil = PhoneNumber.PhoneNumberUtil.getInstance();
-  //   const [recupValid, setRecupValid] = useState("RU");
-  // let listContact = useSelector((state: RootState) => state.contact);
   const { height, width } = useWindowDimensions();
   const [user, setUser] = useState<any>(null);
-  const [disabledScroll, setDisabledScroll] = useState(false);
 
-  const [valuePass, setValuePass] = useState<valuePassSchema>({
-    agence: "",
-    pays: "",
-    currency: "",
-    valid: false,
-  });
+  const [valuePass, setValuePass] = useState<{
+    sum: string;
+    agence: Agency;
+    currentCurrency: string;
+    senderFile?: string;
+  }>();
+
+  const [transactionId, setTransactionId] = useState<string>("");
   const [page, setPage] = useState(0);
+  const [dataSavedTransaction, setDataSavedTransaction] =
+    useState<TransactionServer>();
+  const [status, setStatus] = useState("");
   const colorScheme = useColorScheme();
   const params = useSearchParams();
-  const { start } = useSelector((state: RootState) => state.transation);
-  console.log(
-    "🚀 ~ file: formTransaction.tsx:47 ~ makeTransaction ~ start:",
-    start
+  const { start, cancel, end, full, run } = useSelector(
+    (state: RootState) => state.transation
   );
+  console.log(start, "STARTT");
 
-  let transactionId = Object.keys(start)[1];
+  let route = useRouter();
+  useEffect(() => {
+    if (params.type === "contact" && Object.keys(start)[1]) {
+      let id = Object.keys(start)[1];
+      setTransactionId(id);
+    } else if (params.type === "transaction" && params.id) {
+      let id = params.id as string;
+      setTransactionId(id);
+    }
+  }, [params.type, start]);
+
+  useEffect(() => {
+    [start, cancel, end, full, run].forEach((status) => {
+      if (status[transactionId] && status[transactionId].receiverName) {
+        setDataSavedTransaction(
+          status[transactionId] as unknown as TransactionServer
+        );
+      }
+      console.log("de la", status[transactionId]);
+    });
+  }, [transactionId]);
+
   console.log(
-    "🚀 ~ file: formTransaction.tsx:49 ~ makeTransaction ~ transactionId:",
+    "🚀 ~ file: formTransaction.tsx:71 ~ makeTransaction ~ transactionId:",
     transactionId
   );
 
   let router = useRouter();
   // const contact : ContactShema = params
-  let infoUserReceiver: ContactShema;
+
   const validatePhoneNumber = (phoneNumber: string) => {
     let codeError = {
       isValid: false,
@@ -83,45 +116,103 @@ const makeTransaction = () => {
 
   useEffect(() => {
     const getuser = () => {
-      let rawNumber = (params.number as string)?.trim().replaceAll(" ", "");
-      let result = validatePhoneNumber("+" + rawNumber);
-      if (!result.isValid) {
-        // let resultLibPhone = validatePhoneNumber(rawNumber);
-        let resultPhone = phone("+" + rawNumber, { country: undefined });
+      let rawNumber = (params.number as string)
+        ?.trim()
+        .replaceAll(" ", "")
+        .replace("+", "");
+      let phoneNumber = "+" + rawNumber;
 
-        setUser({
-          isValid: resultPhone.isValid,
-          code: resultPhone.countryIso2,
-          name: params.name,
-          id: params.id,
-          number: resultPhone.phoneNumber || params.number,
-        });
-      } else {
-        let result2 = phone("+" + rawNumber, { country: undefined });
-        setUser({
-          isValid: result2.isValid,
-          code: result2.countryIso2,
-          name: params.name,
-          id: params.id,
-          number: result2.phoneNumber || params.number,
-        });
+      let result = validatePhoneNumber(phoneNumber);
+      let resultPhone = phone(phoneNumber, { country: undefined });
+
+      let isValid = resultPhone.isValid;
+      let code = resultPhone.countryCode;
+      let number = resultPhone.phoneNumber || params.number;
+
+      if (!result.isValid) {
+        isValid = resultPhone.isValid;
+        code = resultPhone.countryCode;
+        number = params.number;
       }
+
+      setUser({
+        isValid,
+        code,
+        name: params.name,
+        id: params.id,
+        number,
+      });
     };
 
     getuser();
   }, [params.number]);
-  // console.log(getuser());
-  const swiperRef = useRef<PagerView>(null);
-  function changeTOProofPayment(val: any) {
-    setDisabledScroll(true);
-    swiperRef.current?.setPage(1);
-    setPage(1);
 
-    setValuePass(val);
+  const swiperRef = useRef<PagerView>(null);
+  function changeTOProofPayment(
+    sum: string,
+    page: number,
+    agence: Agency,
+    currentCurrency: string,
+    senderFile?: string
+  ) {
+    swiperRef.current?.setPage(page);
+    setPage(page);
+    setValuePass({ agence, sum, currentCurrency, senderFile });
   }
+  const changeFrame = (page: number) => {
+    swiperRef.current?.setPage(page);
+    setPage(page);
+  };
+
+  const lastContentOffset = useSharedValue(0);
+  const isScrolling = useSharedValue(false);
+  const translateY = useSharedValue(0);
+
+  const actionBarStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateY: withTiming(translateY.value, {
+            duration: 750,
+            easing: Easing.inOut(Easing.ease),
+          }),
+        },
+      ],
+    };
+  });
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      if (
+        lastContentOffset.value > event.contentOffset.y &&
+        isScrolling.value
+      ) {
+        translateY.value = 0;
+        console.log("scrolling up");
+      } else if (
+        lastContentOffset.value < event.contentOffset.y &&
+        isScrolling.value
+      ) {
+        translateY.value = 100;
+        console.log("scrolling down");
+      }
+      lastContentOffset.value = event.contentOffset.y;
+    },
+    onBeginDrag: (e) => {
+      isScrolling.value = true;
+    },
+    onEndDrag: (e) => {
+      isScrolling.value = false;
+    },
+  });
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
+      <ButtonAdd
+        icon="message"
+        pathname="/discussion"
+        hideButtonScroll={actionBarStyle}
+      />
+
       <View
         lightColor="#f6f7fb"
         style={{
@@ -141,10 +232,13 @@ const makeTransaction = () => {
         >
           <Pressable
             onPress={() => {
-              setPage(0);
-              if (page === 0) {
+              if (status && status === "full") {
+                route.back();
+                setPage(0);
+              }
+              if (page === 0 || page === 2) {
                 router.back();
-              } else {
+              } else if (page === 1) {
                 swiperRef.current?.setPage(0);
                 setPage(0);
               }
@@ -194,18 +288,29 @@ const makeTransaction = () => {
           {user !== null ? (
             <Contact
               key={1}
+              dataSavedTransaction={dataSavedTransaction}
               user={user}
               transactionId={transactionId}
               changeTOProofPayment={changeTOProofPayment}
+              changeFrame={changeFrame}
             />
           ) : (
-            <View key={1}></View>
+            <View key={1} />
           )}
 
           <ProofPayment
             transactionId={transactionId}
-            valuePass={valuePass}
+            dataSavedTransaction={dataSavedTransaction}
+            agence={valuePass?.agence}
+            currentCurrency={valuePass?.currentCurrency}
+            senderFile={valuePass?.senderFile}
+            sum={valuePass?.sum}
             key={2}
+          />
+          <FinalPayment
+            key={3}
+            scrollHandler={scrollHandler}
+            dataSavedTransaction={dataSavedTransaction}
           />
         </PagerView>
         <StatusBar style="dark" backgroundColor="#f7f8fc" />

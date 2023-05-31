@@ -12,6 +12,8 @@ import ButtonAdd from "../../components/ButtonAdd";
 import { View } from "../../components/Themed";
 import Transaction from "../../components/Transaction";
 import { AppDispatch, RootState } from "../../store";
+import { fetchCountryAndAgencies } from "../../store/country/countrySlice";
+import { fetchEntrepriseSlice } from "../../store/entreprise/entrepriseSlice";
 import { fetchTransactions } from "../../store/transaction/transactionSlice";
 import { PURGE_ALL_DATA } from "../_layout";
 
@@ -26,31 +28,29 @@ export default function Home() {
   );
 
   const animatedStyle = useAnimatedStyle(() => {
-    const scale = interpolate(progress.value, [0, 1], [1, 0.8], "clamp");
-    const borderRadius = interpolate(progress.value, [0, 1], [0, 12]);
+    const scale = interpolate(progress.value, [0, 1], [1, 1.05], "clamp");
     return {
-      borderRadius,
       flex: 1,
       transform: [{ scale }],
     };
   }, []);
 
-  // console.log({ user });
+  useEffect(() => {
+    console.log("423658785525255559522");
+
+    dispatch(fetchTransactions());
+    dispatch(fetchEntrepriseSlice());
+    dispatch(fetchCountryAndAgencies());
+  }, []);
 
   useEffect(() => {
     if (!navigationState?.key) return;
     if (!isAuthenticated) {
-      console.log(
-        "🚀 ~ file: index.tsx:43 ~ useEffect ~ isAuthenticated:",
-        isAuthenticated
-      );
       router.replace("register/login");
       PURGE_ALL_DATA();
+    } else {
+      console.log("referesh data");
     }
-    console.log("referesh data");
-    // purgeDiscussion();
-    // dispatch(fetchDiscussions({ idMessennger: user?.messenger }));
-    dispatch(fetchTransactions());
   }, [isAuthenticated, navigationState?.key]);
 
   return (
@@ -58,7 +58,7 @@ export default function Home() {
       <View style={styles.container} lightColor="#f7f8fc">
         <Bilan />
         <Transaction />
-        <ButtonAdd />
+        <ButtonAdd icon="plus" pathname="/formTransaction" />
       </View>
     </Animated.View>
   );
