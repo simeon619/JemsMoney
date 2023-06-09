@@ -91,9 +91,8 @@ function RootLayoutNav({ style }: any) {
           }
           persistor={persistor}
         >
+          <MagicModalPortal />
           <SafeAreaProvider>
-            <MagicModalPortal />
-
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen

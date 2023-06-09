@@ -12,7 +12,6 @@ import { MagicModalPortal } from "react-native-magic-modal";
 import Toast from "react-native-toast-message";
 import { useDispatch } from "react-redux";
 import Colors from "../constants/Colors";
-import { HOST } from "../constants/data";
 import { formatAmount } from "../fonctionUtilitaire/formatAmount";
 import {
   horizontalScale,
@@ -38,15 +37,15 @@ type imagePrepareShema =
   | undefined;
 
 const ProofPayment = ({
-  sum,
-  agence,
-  currentCurrency,
+  sent,
+  received,
+  agenceSender,
   transactionId,
   senderFile,
 }: {
-  sum: string | undefined;
-  agence: Agency | undefined;
-  currentCurrency: string | undefined;
+  sent: { value: number; currency: string } | undefined;
+  received: { value: number; currency: string } | undefined;
+  agenceSender: Agency | undefined;
   transactionId: string;
   senderFile?: string;
   dataSavedTransaction: TransactionServer | undefined;
@@ -66,14 +65,18 @@ const ProofPayment = ({
   const dispatch: AppDispatch = useDispatch();
 
   const pickGallery = async () => {
-    // No permissions request is necessary for launching the image library
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      // allowsEditing: true,
-      quality: 1,
-      base64: true,
-    });
-    if (!result.canceled) {
+    let result;
+    try {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        // allowsEditing: true,
+        quality: 1,
+        base64: true,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+    if (result && !result?.canceled) {
       setImage(result.assets[0].uri);
       let base64 = result.assets[0].base64;
 
@@ -101,8 +104,8 @@ const ProofPayment = ({
   };
 
   const copyToClipboard = async () => {
-    if (agence?.number) {
-      await Clipboard.setStringAsync(agence?.number);
+    if (agenceSender?.number) {
+      await Clipboard.setStringAsync(agenceSender?.number);
     } else {
       Toast.show({
         text1: "Error",
@@ -114,23 +117,29 @@ const ProofPayment = ({
 
     Toast.show({
       text1: "You could use this number now",
-      text2: agence?.number + " has been copied🦾",
+      text2: agenceSender?.number + " has been copied🦾",
       position: "bottom",
       type: "info",
       visibilityTime: 5000,
     });
   };
   const pickImage = async () => {
-    // No permissions request is necessary for launching the image library
-    let result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      // allowsEditing: true,
-      // aspect: [1, 1],
-      quality: 1,
-    });
+    // let result;
+    try {
+      let result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 1,
+      });
+      console.log(
+        "🚀 ~ file: ProofPayment.tsx:136 ~ pickImage ~ result:",
+        result
+      );
 
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      // if (!result?.canceled) {
+      //   setImage(result?.assets[0].uri);
+      // }
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -193,13 +202,7 @@ const ProofPayment = ({
     if (!!prepareImage?.buffer) {
       dispatch(
         updateTransaction({
-          data: {
-            transacData: {
-              senderFile: [prepareImage],
-              // typeTransaction: "agence",
-            },
-            transactionId,
-          },
+          data: { id: transactionId, senderFile: [prepareImage] },
         })
       );
     } else {
@@ -224,76 +227,63 @@ const ProofPayment = ({
       }}
     >
       <View lightColor="#f6f7fb" style={{}}>
-        <Text
-          lightColor="#b2c5ca"
-          style={{ fontSize: moderateScale(16), fontWeight: "900" }}
-        >
-          Follow intruction below for finish you transaction
-        </Text>
-        <View
+        <View lightColor="#f6f7fb" style={styles.paragraphContainer}>
+          <Text
+            lightColor="#b2c5ca"
+            style={[
+              styles.paragraph,
+              { color: Colors[colorSheme ?? "light"].text },
+            ]}
+          >
+            Please transfer the sum of{" "}
+            <Text style={styles.span2}>
+              {formatAmount(sent?.value).replace(",00", "")} {sent?.currency}{" "}
+            </Text>{" "}
+            via <Text style={styles.span2}>{agenceSender?.name}</Text> to{" "}
+            <Text style={styles.span}>{agenceSender?.number}</Text>. And the
+            receiver will have {received?.value} {received?.currency}
+          </Text>
+        </View>
+        <View lightColor="#f6f7fb" style={styles.paragraphContainer}>
+          <Text style={styles.paragraph}>
+            Account name:{" "}
+            <Text style={styles.span2}>{agenceSender?.managerName}</Text>.
+          </Text>
+        </View>
+        <View lightColor="#f6f7fb" style={styles.paragraphContainer}>
+          <Text style={styles.paragraph}>
+            Once the transfer is complete, please attach a screenshot of the
+            payment receipt and click "Next" to confirm.
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          onPress={copyToClipboard}
           style={[
             {
-              // flexDirection: "row",
-              margin: verticalScale(8),
-              borderRadius: 10,
-              paddingHorizontal: horizontalScale(5),
-              borderWidth: 0.4,
-              borderColor: "#0001",
-            },
-            shadow(1),
-            // +amount < 1 && { borderWidth: 0.4, borderColor: "#e42" },
-          ]}
-        >
-          <View style={styles.paragraphContainer}>
-            <Text
-              style={[
-                styles.paragraph,
-                { color: Colors[colorSheme ?? "light"].text },
-              ]}
-            >
-              Please transfer the sum of{" "}
-              <Text style={styles.span2}>
-                {formatAmount(sum).replace(",00", "")} {currentCurrency}{" "}
-              </Text>{" "}
-              via <Text style={styles.span2}>{agence?.name}</Text> to{" "}
-              <Text style={styles.span}>{agence?.number}</Text> (You bear the
-              fee).
-            </Text>
-          </View>
-          <View style={styles.paragraphContainer}>
-            <Text style={styles.paragraph}>
-              Account name:{" "}
-              <Text style={styles.span2}>{agence?.managerName}</Text>.
-            </Text>
-          </View>
-          <View style={styles.paragraphContainer}>
-            <Text style={styles.paragraph}>
-              Once the transfer is complete, please attach a screenshot of the
-              payment receipt and click "Next" to confirm.
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={copyToClipboard}
-            style={{
-              // flex: 2.5,
+              // fl[ex: 2.5,
               justifyContent: "center",
+              backgroundColor: Colors[colorSheme ?? "light"].background,
               alignItems: "center",
               paddingHorizontal: horizontalScale(10),
+              alignSelf: "center",
+              borderRadius: moderateScale(5),
+            },
+            shadow(5),
+          ]}
+        >
+          <Text
+            lightColor="#b2c5ca"
+            style={{
+              fontSize: moderateScale(20),
+              // borderColor: "#b2c5ca",
+              // borderWidth: 1,
+              paddingLeft: horizontalScale(10),
             }}
           >
-            <Text
-              lightColor="#b2c5ca"
-              style={{
-                fontSize: moderateScale(20),
-                borderColor: "#b2c5ca",
-                borderWidth: 1,
-                paddingLeft: horizontalScale(10),
-              }}
-            >
-              Copy the number
-            </Text>
-          </TouchableOpacity>
-        </View>
+            Copy the number
+          </Text>
+        </TouchableOpacity>
       </View>
       <View lightColor="#f6f7fb55" style={{ marginTop: horizontalScale(25) }}>
         <TouchableOpacity
@@ -335,12 +325,8 @@ const ProofPayment = ({
             // +amount < 1 && { borderWidth: 0.4, borderColor: "#e42" },
           ]}
         >
-          {(senderFile || image) && (
-            <ImageRatio
-              uri={senderFile ? HOST + senderFile : image}
-              ratio={2}
-            />
-          )}
+          {/* <ImageRatio uri={senderFile ? HOST + senderFile : image} ratio={2} /> */}
+          {!!image && <ImageRatio uri={image} ratio={2} />}
         </View>
       </View>
 

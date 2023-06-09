@@ -3,6 +3,10 @@ import { PURGE } from "redux-persist";
 import { ID_ENTREPRISE } from "../../constants/data";
 import SQuery from "../../lib/SQueryClient";
 
+let initialState = {
+  loading: true,
+  success: true,
+};
 export const fetchTransacMessagerie = createAsyncThunk<any, void>(
   "transacMessagerie/fetch",
   async (_, thunkAPI) => {
@@ -17,11 +21,11 @@ export const fetchTransacMessagerie = createAsyncThunk<any, void>(
             (country: any) => {
               return new Promise(async (res, rej) => {
                 try {
-                  res(
-                    await createCountry({
-                      countryId: country._id,
-                    })
-                  );
+                  // res(
+                  //   await createCountry({
+                  //     countryId: country._id,
+                  //   })
+                  // );
                 } catch (error) {
                   rej(error);
                 }
@@ -57,7 +61,7 @@ export const transacMessagerieSlice = createSlice({
     builder.addCase(fetchTransacMessagerie.fulfilled, (state, action) => {
       let dataCountries = action.payload;
       dataCountries.forEach((dataCountry: any) => {
-        state[dataCountry.id] = dataCountry;
+        // state[dataCountry.id] = dataCountry;
       });
       state.success = true;
       state.loading = false;

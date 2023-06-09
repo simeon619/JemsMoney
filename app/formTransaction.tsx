@@ -34,7 +34,8 @@ import { Agency } from "../store/country/countrySlice";
 export type valuePassSchema = {
   pays: string;
   valid: boolean;
-  agence: string;
+  agenceReceiver?: string;
+  agenceSender?: string;
   currency: string;
 };
 const makeTransaction = () => {
@@ -43,9 +44,9 @@ const makeTransaction = () => {
   const [user, setUser] = useState<any>(null);
 
   const [valuePass, setValuePass] = useState<{
-    sum: string;
-    agence: Agency;
-    currentCurrency: string;
+    sent: { value: number; currency: string };
+    received: { value: number; currency: string };
+    agenceSender: Agency;
     senderFile?: string;
   }>();
 
@@ -59,10 +60,10 @@ const makeTransaction = () => {
   const { start, cancel, end, full, run } = useSelector(
     (state: RootState) => state.transation
   );
-  console.log(start, "STARTT");
 
   let route = useRouter();
   useEffect(() => {
+    setTransactionId("id");
     if (params.type === "contact" && Object.keys(start)[1]) {
       let id = Object.keys(start)[1];
       setTransactionId(id);
@@ -70,19 +71,20 @@ const makeTransaction = () => {
       let id = params.id as string;
       setTransactionId(id);
     }
-  }, [params.type, start]);
+  }, [params, start]);
 
   useEffect(() => {
+    console.log("78545");
+
     [start, cancel, end, full, run].forEach((status) => {
-      if (status[transactionId] && status[transactionId].receiverName) {
+      if (status[transactionId]) {
         setDataSavedTransaction(
-          status[transactionId] as unknown as TransactionServer
+          status[transactionId] as any as TransactionServer
         );
       }
       console.log("de la", status[transactionId]);
     });
-  }, [transactionId]);
-
+  });
   console.log(
     "🚀 ~ file: formTransaction.tsx:71 ~ makeTransaction ~ transactionId:",
     transactionId
@@ -149,15 +151,15 @@ const makeTransaction = () => {
 
   const swiperRef = useRef<PagerView>(null);
   function changeTOProofPayment(
-    sum: string,
+    sent: { value: number; currency: string },
+    received: { value: number; currency: string },
     page: number,
-    agence: Agency,
-    currentCurrency: string,
+    agenceSender: Agency,
     senderFile?: string
   ) {
     swiperRef.current?.setPage(page);
     setPage(page);
-    setValuePass({ agence, sum, currentCurrency, senderFile });
+    setValuePass({ agenceSender, sent, received, senderFile });
   }
   const changeFrame = (page: number) => {
     swiperRef.current?.setPage(page);
@@ -211,6 +213,7 @@ const makeTransaction = () => {
         icon="message"
         pathname="/discussion"
         hideButtonScroll={actionBarStyle}
+        dataSavedTransaction={dataSavedTransaction}
       />
 
       <View
@@ -301,10 +304,12 @@ const makeTransaction = () => {
           <ProofPayment
             transactionId={transactionId}
             dataSavedTransaction={dataSavedTransaction}
-            agence={valuePass?.agence}
-            currentCurrency={valuePass?.currentCurrency}
+            agenceSender={valuePass?.agenceSender}
+            sent={valuePass?.sent}
+            received={valuePass?.received}
+            // currentCurrency={valuePass?.currentCurrency}
             senderFile={valuePass?.senderFile}
-            sum={valuePass?.sum}
+            // sum={valuePass?.sum}
             key={2}
           />
           <FinalPayment

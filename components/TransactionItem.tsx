@@ -1,13 +1,13 @@
 import { Entypo } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import React, { memo } from "react";
+import React, { memo, useEffect, useState } from "react";
 import {
   TouchableOpacity,
   useColorScheme,
   useWindowDimensions,
 } from "react-native";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Colors from "../constants/Colors";
 import { formatDate } from "../fonctionUtilitaire/date";
 import { formatAmount } from "../fonctionUtilitaire/formatAmount";
@@ -17,12 +17,12 @@ import {
   shadow,
   verticalScale,
 } from "../fonctionUtilitaire/metrics";
-import SQuery from "../lib/SQueryClient";
-import { RootState } from "../store";
+import { AppDispatch, RootState } from "../store";
+import { addDiscussion } from "../store/message/messageSlice";
 import { transactionDataSchema } from "../store/transaction/transactionSlice";
 import { MonoText } from "./StyledText";
 import { View } from "./Themed";
-let color = "#fff";
+let color = "#fafafa";
 const TransactionItem = ({
   dataTransaction,
 }: {
@@ -37,8 +37,37 @@ const TransactionItem = ({
     "🚀 ~ file: TransactionItem.tsx:31 ~ dataTransaction:",
     dataTransaction
   );
-  const country = useSelector((state: RootState) => state.country);
+  useSelector((state: RootState) => state.transation);
+  const [isClicked, setIsCliked] = useState(false);
+  const { discussions, loading, success } = useSelector(
+    (state: RootState) => state.message
+  );
+  console.log("🚀 ~ file: TransactionItem.tsx:43 ~ Messages:", discussions);
 
+  useEffect(() => {
+    console.log("1255555", dataTransaction);
+    let Disc = Object.keys(discussions).find(
+      (discId) => discId === dataTransaction.discussionId
+    );
+    console.log(
+      "🚀 ~ file: TransactionItem.tsx:52 ~ useEffect ~ Disc:",
+      Disc,
+      isClicked,
+      success
+    );
+    if (Disc && isClicked && success) {
+      console.log("12555556", { Disc });
+      router.push({
+        pathname: "/discussion",
+        params: {
+          id: Disc,
+        },
+      });
+      setIsCliked(false);
+    }
+  }, [discussions, isClicked, success]);
+
+  const dispatch: AppDispatch = useDispatch();
   let router = useRouter();
   return (
     <View
@@ -146,10 +175,8 @@ const TransactionItem = ({
                 <MonoText
                   style={{ fontSize: moderateScale(16), fontWeight: "600" }}
                 >
-                  {formatAmount(
-                    dataTransaction.sum,
-                    country[dataTransaction?.country]?.currency
-                  ).replace(",00", "")}
+                  {formatAmount(dataTransaction.sent?.value).replace(",00", "")}{" "}
+                  {dataTransaction.sent?.currency}
                 </MonoText>
                 {/* <MonoText style={{ fontSize: moderateScale(10) }}>CFA</MonoText> */}
               </View>
@@ -165,18 +192,13 @@ const TransactionItem = ({
               params: { id: dataTransaction.discussionId },
             });
           } else {
-            let discussionId = await SQuery.service(
-              "transaction",
-              "addDiscussion",
-              {
-                id: dataTransaction.id,
-              }
-            );
-
-            router.push({
-              pathname: "/discussion",
-              params: { id: discussionId },
-            });
+            // let discussionId =
+            dispatch(addDiscussion(dataTransaction.id));
+            console.log("discussionId", "78458454847");
+            setIsCliked(true);
+            if (success) {
+              console.log("discussionId", "4445");
+            }
           }
         }}
         style={[

@@ -16,7 +16,8 @@ type Country = {
 };
 
 export type TransactionServer = {
-  agence: string;
+  agenceReceiver?: string;
+  agenceSender?: string;
   carte?: any;
   codePromo: string;
   country: string;
@@ -29,7 +30,8 @@ export type TransactionServer = {
   sender: string;
   senderFile?: any;
   status: string;
-  sum: number;
+  sent: { value: number; currency: string };
+  received: { value: number; currency: string };
   telephone: string;
   transactionId: string;
   updatedAt: number;

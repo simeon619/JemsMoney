@@ -1,4 +1,9 @@
+import { Entypo, FontAwesome } from "@expo/vector-icons";
+import getSymbolFromCurrency from "currency-symbol-map";
 import { Image } from "expo-image";
+import * as Localization from "expo-localization";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
+import phone from "phone";
 import React, { useEffect, useRef, useState } from "react";
 import {
   FlatList,
@@ -7,21 +12,17 @@ import {
   TouchableOpacity,
   useColorScheme,
 } from "react-native";
+import { MagicModalPortal, magicModal } from "react-native-magic-modal";
+import { useDispatch, useSelector } from "react-redux";
+import Colors from "../constants/Colors";
+import { normeFormat } from "../fonctionUtilitaire/data";
+import { formatAmount } from "../fonctionUtilitaire/formatAmount";
 import {
   horizontalScale,
   moderateScale,
   shadow,
   verticalScale,
 } from "../fonctionUtilitaire/metrics";
-
-import { Entypo } from "@expo/vector-icons";
-import getSymbolFromCurrency from "currency-symbol-map";
-import phone from "phone";
-import { MagicModalPortal, magicModal } from "react-native-magic-modal";
-import { useDispatch, useSelector } from "react-redux";
-import Colors from "../constants/Colors";
-import { normeFormat } from "../fonctionUtilitaire/data";
-import { formatAmount } from "../fonctionUtilitaire/formatAmount";
 import { TransactionServer } from "../fonctionUtilitaire/type";
 import { AppDispatch, RootState } from "../store";
 import { Agency } from "../store/country/countrySlice";
@@ -44,10 +45,10 @@ const Contact = ({
     number: string;
   };
   changeTOProofPayment: (
-    sum: string,
+    sent: { value: number; currency: string },
+    received: { value: number; currency: string },
     page: number,
-    agence: Agency,
-    currentCurrency: string,
+    agenceSender: Agency,
     senderFile?: string
   ) => void;
   transactionId: string;
@@ -58,46 +59,76 @@ const Contact = ({
   const { rates, serviceCharge } = useSelector(
     (state: RootState) => state.entreprise
   );
+  const { currency: CuurencyPreference, country: countryPreference } =
+    useSelector((state: RootState) => state.preference);
+
+  console.log({ countryPreference });
+
   const colorSheme = useColorScheme();
+
+  const [locale, setLocale] = useState<Localization.Locale>();
+
   const [countryId, setCountryId] = useState<string>("");
   const [currencyReceiver, setCurrencyReceiver] = useState<string>(
     country[""]?.currency
   );
-  const [currentCurrency, setCurrentCurrency] = useState<string>("XOF");
-
-  const [amount, setAmount] = useState<string>("0");
+  const [currentCurrency, setCurrentCurrency] =
+    useState<string>(CuurencyPreference);
+  const [amount, setAmount] = useState<string>("");
   const [name, setName] = useState<string>(user?.name);
   const [valid, setValid] = useState<boolean>(Boolean(user?.isValid));
-  const [change, setChange] = useState<number>(
-    rates[currentCurrency + "to" + country[""]?.currency]
-  );
+  const [change, setChange] = useState<number>();
   const [cardSb, setCardSb] = useState<string>("");
   const [service, setService] = useState<Agency[]>();
   const [fee, setFee] = useState<number>(0.05);
-  const [agence, setAgence] = useState<Agency>();
+  const [agenceReceiver, setAgenceReceiver] = useState<Agency>();
+  const [agenceSender, setAgenceSender] = useState<Agency>();
   const [number, setNumber] = useState<string>(() => {
-    let number = user?.number?.replaceAll(" ", "");
-    return number;
-  });
-  let montant = parseFloat(amount) * (change || 1);
-  console.log({ dataSavedTransaction }, "OLOLLOLO");
+    let number = user?.number?.replace(/\s/g, "");
 
-  let taxes = (fee * montant) / 100;
+    return (
+      parsePhoneNumberFromString(
+        String(country[countryId]?.indicatif + number)
+      )?.formatNational() || number
+    );
+  });
+  let montant =
+    parseFloat(amount.replace(/\s/g, "").replace(",", ".")) * (change || 1);
+
+  let taxes = fee * montant;
+
   const dispatch: AppDispatch = useDispatch();
+  const amountReceived = formatAmount(montant - taxes)
+    .replace(",", ".")
+    .replace(",00", "");
+  console.log(formatAmount(montant - taxes).replace(",", "."));
+
+  useEffect(() => {
+    const fetchLocale = async () => {
+      let local = Localization.getLocales();
+      setLocale(local[local.length - 1]);
+    };
+
+    fetchLocale();
+  }, []);
 
   useEffect(() => {
     setCountryId(dataSavedTransaction?.country || "");
 
     setCurrencyReceiver(country[dataSavedTransaction?.country || ""]?.currency);
-    setFee(
-      serviceCharge +
-        (country[dataSavedTransaction?.country || ""]?.charge || 0) +
-        (agence?.charge || 0)
+    setCurrentCurrency(
+      dataSavedTransaction?.sent?.currency || CuurencyPreference
     );
-    setAmount(
-      dataSavedTransaction?.sum ? String(dataSavedTransaction?.sum) : "0"
-    );
-    setName(dataSavedTransaction?.receiverName || user?.name);
+    setAmount(() => {
+      if (!dataSavedTransaction?.sent?.value) return "";
+      const cleanValue = String(dataSavedTransaction?.sent?.value)?.replace(
+        /[^0-9a-z]/g,
+        ""
+      );
+      const formattedValue = parseFloat(cleanValue).toLocaleString("CI");
+      return formattedValue.replace("NaN", "");
+    });
+    setName(user?.name || dataSavedTransaction?.receiverName || "");
     setValid(Boolean(user?.isValid));
     setChange(
       rates[
@@ -106,18 +137,18 @@ const Contact = ({
           country[dataSavedTransaction?.country || ""]?.currency
       ]
     );
-    setCardSb(dataSavedTransaction?.country || "");
+    setCardSb(dataSavedTransaction?.carte || "");
 
     let number =
-      dataSavedTransaction?.telephone || user?.number?.replaceAll(" ", "");
+      user?.number?.replace(/\s/g, "") || dataSavedTransaction?.telephone;
     const indicatifLength =
-      country[dataSavedTransaction?.country || ""]?.indicatif?.length ||
-      user?.code?.length;
+      user?.code?.length ||
+      country[dataSavedTransaction?.country || ""]?.indicatif?.length;
 
     if (number) {
       number = number.slice(indicatifLength);
     } else {
-      number = user?.number?.replaceAll(" ", "");
+      number = user?.number?.replace(/\s/g, "");
     }
     if (user?.code) {
       Object.keys(country).forEach((id) => {
@@ -127,7 +158,12 @@ const Contact = ({
       });
     }
 
-    setNumber(number);
+    const phoneNumber = parsePhoneNumberFromString(
+      String(country[countryId]?.indicatif + number)
+    );
+
+    setNumber(phoneNumber?.formatNational() || number);
+    // setNumber(phoneNumber);
   }, [
     dataSavedTransaction,
     country,
@@ -138,13 +174,21 @@ const Contact = ({
   ]);
 
   useEffect(() => {
-    setCurrencyReceiver(country[countryId]?.currency);
     // setFee(
-    //   +country[countryId]?.charge +
-    //     +serviceCharge +
-    //     +country[countryId]?.agency[0]?.charge
+    //   serviceCharge +
+    //     (country[dataSavedTransaction?.country || ""]?.charge || 0) +
+    //     (agence?.charge || 0)
     // );
-  }, [countryId]);
+    console.log(agenceReceiver?.charge || "0.02");
+  }, [agenceReceiver]);
+  useEffect(() => {
+    setCurrencyReceiver(country[countryId]?.currency);
+    setFee(
+      +serviceCharge +
+        +(agenceReceiver?.charge || "0.02") +
+        +(agenceSender?.charge || "0.02")
+    );
+  }, [countryId, agenceReceiver, agenceSender]);
 
   useEffect(() => {
     let validnumber = country[countryId]?.indicatif
@@ -152,12 +196,19 @@ const Contact = ({
       : user.code + number;
     let resultPhone = phone(validnumber, { country: undefined });
     setValid(resultPhone.isValid);
-    setAgence(undefined);
+    setAgenceReceiver(undefined);
 
     setService(country[countryId]?.agency);
     country[countryId]?.agency.forEach((agence) => {
-      if (agence.id === dataSavedTransaction?.agence) {
-        setAgence(agence);
+      console.log(
+        "🚀 ~ file: Contact.tsx:203 ~ country[countryId]?.agency.forEach ~ agence:",
+        agence
+      );
+      if (agence.id === dataSavedTransaction?.agenceReceiver) {
+        setAgenceReceiver(agence);
+      }
+      if (agence.id === dataSavedTransaction?.agenceSender) {
+        setAgenceSender(agence);
       }
     });
   }, [countryId, number]);
@@ -165,14 +216,14 @@ const Contact = ({
 
   useEffect(() => {
     if (isFirstMount.current) {
-      if (agence && dataSavedTransaction?.senderFile) {
+      if (agenceReceiver && agenceSender && dataSavedTransaction?.senderFile) {
         isFirstMount.current = false;
         const timer = setTimeout(() => {
           changeTOProofPayment(
-            String(dataSavedTransaction.sum),
+            dataSavedTransaction.sent,
+            dataSavedTransaction.received,
             2,
-            agence,
-            currentCurrency,
+            agenceSender,
             dataSavedTransaction.senderFile
           );
         });
@@ -182,11 +233,72 @@ const Contact = ({
         };
       }
     }
-  }, [agence, dataSavedTransaction?.senderFile]);
+  }, [agenceSender, dataSavedTransaction?.senderFile]);
 
   useEffect(() => {
     setChange(rates[currentCurrency + "to" + currencyReceiver]);
   }, [currencyReceiver, currentCurrency]);
+
+  const ServiceSenderModal = () => {
+    const renderItem = ({ item }: { item: Agency }) => {
+      //@ts-ignore
+      // item.
+      return (
+        <TouchableOpacity
+          onPress={() => {
+            magicModal.hide(<ServiceSenderModal />);
+            setAgenceSender(item);
+          }}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: moderateScale(10),
+          }}
+        >
+          <MonoText
+            style={{
+              fontSize: moderateScale(20),
+              textAlign: "left",
+              paddingVertical: verticalScale(10),
+            }}
+          >
+            {item?.name}
+          </MonoText>
+          <Image
+            source={item?.icon}
+            contentFit="contain"
+            style={{
+              width: horizontalScale(60),
+              aspectRatio: 1,
+              // marginRight: 5,
+              // paddingVertical: moderateScale(15),
+            }}
+          />
+        </TouchableOpacity>
+      );
+    };
+    return (
+      <View
+        style={{
+          position: "absolute",
+          left: 5,
+          right: 5,
+          bottom: 1,
+          padding: moderateScale(10),
+          borderRadius: 10,
+        }}
+      >
+        <FlatList
+          data={country[countryPreference.id]?.agency || []}
+          //@ts-ignore
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+        />
+      </View>
+    );
+  };
+
   const ServiceModal = () => {
     const renderItem = ({ item }: { item: Agency }) => {
       //@ts-ignore
@@ -195,7 +307,7 @@ const Contact = ({
         <TouchableOpacity
           onPress={() => {
             magicModal.hide(<ServiceModal />);
-            setAgence(item);
+            setAgenceReceiver(item);
           }}
           style={{
             flexDirection: "row",
@@ -254,7 +366,6 @@ const Contact = ({
       change.add(currencyCode);
     });
     const renderItem = ({ item }: { item: string }) => {
-      console.log("🚀 ~ file: Contact.tsx:237 ~ renderItem ~ item:", item);
       //@ts-ignore
       // item.
       return (
@@ -360,36 +471,65 @@ const Contact = ({
   };
 
   const handleChangeText = (text: string) => {
-    const cleanText = text.replace(/,/g, "");
-
-    setAmount(cleanText);
+    const cleanValue = text.replace(/[^0-9a-z]/g, "");
+    const formattedValue = parseFloat(cleanValue).toLocaleString("CI");
+    setAmount(formattedValue.replace("NaN", ""));
   };
 
+  function handleNumber(txt: string) {
+    const phoneNumber = parsePhoneNumberFromString(
+      country[countryId]?.indicatif + txt,
+      (locale?.regionCode as any) || "CI"
+    );
+
+    setNumber(phoneNumber?.formatNational() || txt);
+  }
   function verifyAndNext(): void {
     let realNumber = country[countryId]?.indicatif + number;
+    const phoneNumber = parsePhoneNumberFromString(realNumber);
+    console.log(
+      "🚀 ~ file: Contact.tsx:384 ~ verifyAndNext ~ phoneNumber:",
+      phoneNumber?.formatInternational()
+    );
+    //  received :{ value : formatAmount(montant - taxes).replace(",00", ""), currency : currencyReceiver}
+    //  sent :{ value : amount.replace(/\s/g, "") , currency : currentCurrency}
     const nameRegex = /^[A-Za-z]+$/;
     // let testAgence =
     //   agence?.name === "ORANGE MONEY" || agence === "MTN MONEY" || agence === "WAVE";
     // let testName = /^[a-zA-ZÀ-ÖØ-öø-ſÇ-üŸ-ÿ\s-]+$/.test(name) || /^[а-яА-ЯёЁ]+$/.test(name);
 
-    if (!!agence?.name && name?.length >= 3) {
-      changeTOProofPayment(amount, 1, agence, currentCurrency);
+    if (!!agenceSender?.name && !!agenceSender?.name && name?.length >= 3) {
+      // changeTOProofPayment(amount, 1, agence, currentCurrency);
+      changeTOProofPayment(
+        { value: +amount.replace(/\s/g, ""), currency: currentCurrency },
+        {
+          value: +amountReceived.replace(/\s/g, ""),
+          currency: currencyReceiver,
+        },
+        1,
+        agenceSender
+      );
       dispatch(
         updateTransaction({
           data: {
-            transacData: {
-              telephone: realNumber,
-              sum: amount,
-              agence: agence.id,
-              country: countryId,
-              receiverName: name,
-              carte: cardSb,
-              codePromo: "jems545",
-              typeTransaction: !!cardSb ? "carte" : "number",
-
-              // typeTransaction: "agence",
+            telephone: realNumber.replace(/\s/g, ""),
+            agenceReceiver: agenceReceiver?.id,
+            agenceSender: agenceSender.id,
+            country: countryId,
+            received: {
+              value: +amountReceived.replace(/\s/g, ""),
+              currency: currencyReceiver,
             },
-            transactionId,
+            sent: {
+              value: +amount.replace(/\s/g, ""),
+              currency: currentCurrency,
+            },
+            receiverName: name,
+            carte: cardSb,
+            codePromo: "jems545",
+            typeTransaction: !!cardSb ? "carte" : "number",
+            id: transactionId,
+            // typeTransaction: "agence",
           },
         })
       );
@@ -398,13 +538,13 @@ const Contact = ({
         transactionId
       );
 
-      console.log({ valid, agence, realNumber });
+      console.log({ valid, agenceReceiver, realNumber });
     }
   }
 
   return (
     <ScrollView
-      keyboardShouldPersistTaps="never"
+      keyboardShouldPersistTaps="handled"
       lightColor="#f6f7fb"
       style={{
         flex: 1,
@@ -421,9 +561,9 @@ const Contact = ({
         <View lightColor="#f6f7fb" style={{ marginTop: horizontalScale(20) }}>
           <Text
             lightColor="#b2c5ca"
-            style={{ fontSize: moderateScale(16), fontWeight: "500" }}
+            style={{ fontSize: moderateScale(17), fontWeight: "500" }}
           >
-            Recipient name
+            Nom du Receveur
           </Text>
           <View
             style={[
@@ -475,12 +615,12 @@ const Contact = ({
           )}
         </View>
 
-        <View lightColor="#f6f7fb" style={{ marginTop: horizontalScale(20) }}>
+        <View lightColor="#f6f7fb">
           <Text
             lightColor="#b2c5ca"
-            style={{ fontSize: moderateScale(16), fontWeight: "500" }}
+            style={{ fontSize: moderateScale(17), fontWeight: "500" }}
           >
-            Recipient number
+            Numero du receveur
           </Text>
 
           <View
@@ -524,13 +664,13 @@ const Contact = ({
               </Text>
             </TouchableOpacity>
             <TextInput
-              maxLength={
-                parseInt(country[countryId]?.digit) || user.number?.length
-              }
+              // maxLength={
+              //   parseInt(country[countryId]?.digit) || user.number?.length
+              // }
               value={number}
               placeholder="0565848273"
               onChangeText={(txt) => {
-                setNumber(txt);
+                handleNumber(txt);
               }}
               keyboardType="phone-pad"
               style={{
@@ -566,7 +706,7 @@ const Contact = ({
         </View>
 
         {country[countryId]?.name === "russie" ? (
-          <View lightColor="#f6f7fb" style={{ marginTop: horizontalScale(20) }}>
+          <View lightColor="#f6f7fb">
             <Text
               lightColor="#b2c5ca"
               style={{ fontSize: moderateScale(16), fontWeight: "500" }}
@@ -621,12 +761,12 @@ const Contact = ({
             </View>
           </View>
         ) : valid ? (
-          <View lightColor="#f6f7fb" style={{ marginTop: horizontalScale(10) }}>
+          <View lightColor="#f6f7fb">
             <Text
               lightColor="#b2c5ca"
-              style={{ fontSize: moderateScale(16), fontWeight: "500" }}
+              style={{ fontSize: moderateScale(17), fontWeight: "500" }}
             >
-              Withdrawal mode
+              Mode retrait
             </Text>
 
             <TouchableOpacity
@@ -669,18 +809,76 @@ const Contact = ({
                   // backgroundColor: "red",
                 }}
               >
-                {agence?.name}
+                {agenceReceiver?.name}
               </Text>
             </TouchableOpacity>
           </View>
         ) : null}
-
-        <View lightColor="#f6f7fb" style={{ marginTop: horizontalScale(20) }}>
+        {!!agenceReceiver?.charge && (
+          <View lightColor="#f6f7fb">
+            <Text
+              lightColor="#b2c5ca"
+              style={{ fontSize: moderateScale(17), fontWeight: "500" }}
+            >
+              Montant reel reçu. (Avec frais)
+            </Text>
+            <View
+              lightColor="#f6f7fb"
+              style={[
+                {
+                  flexDirection: "row",
+                  margin: verticalScale(8),
+                  borderRadius: 10,
+                  borderWidth: 0.4,
+                  borderColor: "#0001",
+                },
+                // shadow(1),
+              ]}
+            >
+              <TouchableOpacity
+                onPress={() => {
+                  magicModal.show(() => <ResponseModal />);
+                }}
+                style={{
+                  flex: 2.5,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <FontAwesome
+                  name="money"
+                  size={25}
+                  color={Colors[colorSheme ?? "light"].text}
+                />
+              </TouchableOpacity>
+              <Text
+                style={{
+                  flex: 10,
+                  paddingHorizontal: horizontalScale(5),
+                  paddingVertical: verticalScale(8),
+                  fontSize: moderateScale(20),
+                  fontWeight: "500",
+                }}
+              >
+                {amountReceived}{" "}
+                <Text
+                  style={{
+                    fontSize: moderateScale(20),
+                    paddingLeft: horizontalScale(10),
+                  }}
+                >
+                  {getSymbolFromCurrency(currencyReceiver)}
+                </Text>
+              </Text>
+            </View>
+          </View>
+        )}
+        <View lightColor="#f6f7fb">
           <Text
             lightColor="#b2c5ca"
             style={{ fontSize: moderateScale(16), fontWeight: "500" }}
           >
-            Amount to send
+            Montant envoyer
           </Text>
           <View
             style={[
@@ -711,7 +909,9 @@ const Contact = ({
               // maxLength={10}
               value={amount}
               onChangeText={handleChangeText}
+              placeholderTextColor={Colors[colorSheme ?? "light"].text}
               keyboardType="numeric"
+              placeholder="0"
               // pas
               style={{
                 flex: 10,
@@ -728,6 +928,7 @@ const Contact = ({
               }}
               style={{
                 // flex: 2.5,
+                flexDirection: "row",
                 justifyContent: "center",
                 alignItems: "center",
                 paddingHorizontal: horizontalScale(10),
@@ -744,6 +945,7 @@ const Contact = ({
               >
                 {getSymbolFromCurrency(currentCurrency)}
               </Text>
+              <Entypo name="chevron-down" size={25} color={"#b2c5ca"} />
             </TouchableOpacity>
           </View>
           {+amount < 1 ? (
@@ -754,74 +956,57 @@ const Contact = ({
             <Text />
           )}
         </View>
-        <View lightColor="#f6f7fb" style={{}}>
+        <View lightColor="#f6f7fb">
           <Text
             lightColor="#b2c5ca"
-            style={{ fontSize: moderateScale(15), fontWeight: "500" }}
+            style={{ fontSize: moderateScale(17), fontWeight: "500" }}
           >
-            Real amount Received (after fee)
+            Mode d'envoie
           </Text>
-          <View
+
+          <TouchableOpacity
+            onPress={() => {
+              magicModal.show(() => <ServiceSenderModal />);
+            }}
             style={[
               {
-                flexDirection: "row",
-                margin: verticalScale(8),
+                //   flex: 3,
+                // justifyContent: "center",
+                // alignItems: "center",
+                // paddingHorizontal: horizontalScale(0),
                 borderRadius: 10,
-                borderWidth: 0.4,
-                borderColor: "#0001",
+                margin: verticalScale(8),
+                flexDirection: "row",
+                justifyContent: "center",
+                paddingVertical: verticalScale(10),
+                // paddingHorizontal: horizontalScale(5),
+                backgroundColor: "white",
               },
               shadow(1),
             ]}
           >
-            <TouchableOpacity
-              onPress={() => {
-                magicModal.show(() => <ResponseModal />);
-              }}
+            <Entypo
+              name="chevron-down"
+              size={30}
+              color={"#b2c5ca"}
               style={{
-                flex: 2.5,
-                justifyContent: "center",
-                alignItems: "center",
+                position: "absolute",
+                left: horizontalScale(10),
+                bottom: verticalScale(5),
               }}
-            >
-              <Entypo
-                name="wallet"
-                size={25}
-                color={Colors[colorSheme ?? "light"].text}
-              />
-            </TouchableOpacity>
+            />
             <Text
+              lightColor="#b2c5ca"
               style={{
-                flex: 10,
-                paddingHorizontal: horizontalScale(5),
-                paddingVertical: verticalScale(8),
-                color: Colors[colorSheme ?? "light"].text,
-                fontSize: moderateScale(20),
-                fontWeight: "500",
+                fontSize: moderateScale(18),
+                // paddingHorizontal: horizontalScale(10),
+                textAlign: "center",
+                // backgroundColor: "red",
               }}
             >
-              {formatAmount(montant - taxes)}
+              {agenceSender?.name}
             </Text>
-            <TouchableOpacity
-              style={{
-                // flex: 2.5,
-                justifyContent: "center",
-                alignItems: "center",
-                paddingHorizontal: horizontalScale(10),
-              }}
-            >
-              <Text
-                lightColor="#b2c5ca"
-                style={{
-                  fontSize: moderateScale(22),
-                  // borderLeftColor: "#b2c5ca",
-                  // borderLeftWidth: 1,
-                  paddingLeft: horizontalScale(10),
-                }}
-              >
-                {getSymbolFromCurrency(currencyReceiver)}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         </View>
         <TouchableOpacity
           onPress={verifyAndNext}

@@ -146,14 +146,14 @@ export default function DrawerLayout() {
                 router.push("/modal");
               }}
             >
-              <MonoText
+              {/* <MonoText
                 style={{
                   color: Colors[colorScheme ?? "light"].text,
                   fontSize: moderateScale(16),
                 }}
               >
                 Find contact
-              </MonoText>
+              </MonoText> */}
 
               <AntDesign
                 name="contacts"
@@ -220,6 +220,7 @@ export default function DrawerLayout() {
         component={PreferenceScreen}
         options={{
           title: "Preferences",
+          headerShown: false,
           headerTitle: "",
           drawerIcon: ({ color }) => (
             <DrawerItemIcon name="stethoscope" color={color} />

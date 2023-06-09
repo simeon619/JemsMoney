@@ -25,6 +25,9 @@ const InstanceAudio = ({ voiceUrl }: { voiceUrl: any }) => {
   const tooglePlay = () => {
     setIsPlay((prev) => !prev);
   };
+
+  console.log({ voiceUrl });
+
   // let audioPath = useRef<string>("").current;
   useEffect(() => {
     const fetchAudio = async () => {
@@ -122,12 +125,12 @@ const InstanceAudio = ({ voiceUrl }: { voiceUrl: any }) => {
     widthAnim.value = withSpring(
       (audioPosition / audioDuration || 1) * (width - width / 3),
       {
-        damping: 10, // Réduisez la valeur de l'amortissement pour un mouvement plus fluide
-        stiffness: 20, // Augmentez la rigidité pour un mouvement plus réactif
-        mass: 10, // Réduisez la masse pour un mouvement plus rapide
-        overshootClamping: true,
-        restDisplacementThreshold: 1,
-        restSpeedThreshold: 1,
+        // damping: 10, // Réduisez la valeur de l'amortissement pour un mouvement plus fluide
+        // stiffness: 20, // Augmentez la rigidité pour un mouvement plus réactif
+        // mass: 10, // Réduisez la masse pour un mouvement plus rapide
+        // overshootClamping: true,
+        // restDisplacementThreshold: 1,
+        // restSpeedThreshold: 1,
       }
     );
     return {

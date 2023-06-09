@@ -32,12 +32,12 @@ const login = () => {
     (state: RootState) => state.auth
   );
   const { height, width } = useWindowDimensions();
-  const [password, setPassword] = useState<string>("");
+  const [password, setPassword] = useState<string>("2569");
   const [step, setStep] = useState<"1" | "2" | "3">("1");
   const [pays, setPays] = useState<"RU" | "CI" | "CM" | "TG" | "BE" | "">("CI");
 
   const [phoneNumber, setPhoneNumber] = useState<string>("");
-  const [inputTelUser, setInputTelUser] = useState<string>("");
+  const [inputTelUser, setInputTelUser] = useState<string>("0565848273");
 
   const [validTel, setValidTel] = useState<boolean>(false);
   const colorSheme = useColorScheme();

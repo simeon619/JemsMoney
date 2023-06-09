@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { enablePatches, produceWithPatches } from "immer";
+import { enablePatches } from "immer";
 import { PURGE } from "redux-persist";
 import { RootState } from "..";
 import SQuery from "../../lib/SQueryClient";
@@ -11,22 +11,22 @@ type accountSchema = {
 } | null;
 type updateTransactionSchema = {
   data: {
-    transactionId: string;
-    transacData: {
-      sum?: string;
-      codePromo?: string;
-      senderFile?: any;
-      receiverName?: string;
-      country?: any;
-      telephone?: string;
-      carte?: string;
-      agence?: string;
-      typeTransaction?: string;
-    };
+    id: string;
+    sent?: { value: number; currency: string };
+    received?: { value: number; currency: string };
+    codePromo?: string;
+    senderFile?: any;
+    receiverName?: string;
+    country?: any;
+    telephone?: string;
+    carte?: string;
+    agenceReceiver?: string;
+    agenceSender?: string;
+    typeTransaction?: string;
   };
 };
 export type transactionDataSchema = {
-  sender: accountSchema;
+  senderAccount?: accountSchema;
   id?: string;
   manager: accountSchema;
   discussionId: string;
@@ -42,7 +42,8 @@ export type transactionDataSchema = {
   codePromo?: string;
   createdAt?: string;
   updatedAt?: string;
-  sum?: string;
+  sent?: { value: number; currency: string };
+  received?: { value: number; currency: string };
   status: "start" | "run" | "end" | "cancel" | "full" | "";
 };
 export type TransactionSchema = {
@@ -59,19 +60,19 @@ type initialState = {
 };
 let initialState: initialState = {
   start: {
-    "": { sender: null, manager: null, discussionId: "", status: "" },
+    "": { senderAccount: null, manager: null, discussionId: "", status: "" },
   },
   full: {
-    "": { sender: null, manager: null, discussionId: "", status: "" },
+    "": { senderAccount: null, manager: null, discussionId: "", status: "" },
   },
   run: {
-    "": { sender: null, manager: null, discussionId: "", status: "" },
+    "": { senderAccount: null, manager: null, discussionId: "", status: "" },
   },
   end: {
-    "": { sender: null, manager: null, discussionId: "", status: "" },
+    "": { senderAccount: null, manager: null, discussionId: "", status: "" },
   },
   cancel: {
-    "": { sender: null, manager: null, discussionId: "", status: "" },
+    "": { senderAccount: null, manager: null, discussionId: "", status: "" },
   },
   fetchLoading: false,
   fetchSuccess: false,
@@ -89,6 +90,8 @@ async function createTransaction({
   });
 
   transaction?.when("refresh", async (transaction) => {
+    console.log({ transaction }, "fullly");
+
     //  Object.keys(obj)
     const refreshStatus = async () => {
       const transactionRefresh = await SQuery.newInstance("transaction", {
@@ -119,70 +122,25 @@ async function createTransaction({
         ][transactionId];
 
         if (transationForget) {
-          console.log(
-            "🚀 ~ file: transactionSlice.ts:127 ~ ).forEach ~ transationForget:",
-            transationForget
-          );
           objTransactionData = transationForget;
         }
       });
-      // if (keyTransaction === "agence") {
-      //   let charge = transaction[keyTransaction].$cache.charge;
-      //   let id = transaction[keyTransaction].$cache._id;
-      //   let managerName = transaction[keyTransaction].$cache.managerName;
-      //   let name = transaction[keyTransaction].$cache.name;
-      //   let icon = transaction[keyTransaction].$cache.icon;
-      //   let number = transaction[keyTransaction].$cache.number;
-
-      //   let collecteDataAgence = {
-      //     charge,
-      //     id,
-      //     icon,
-      //     name,
-      //     number,
-      //     managerName,
-      //   };
-      // }
-      // objTransactionData["agence"] = collecteDataAgence;
-      // objTransactionData["country"] = collecteDataCountry;
-
-      // if (keyTransaction === "country") {
-      //   let id = transaction[keyTransaction].$cache._id;
-      //   let agencies = transaction[keyTransaction].$cache.agencies;
-      //   let allowCarte = transaction[keyTransaction].$cache.allowCarte;
-      //   let icon = transaction[keyTransaction].$cache.icon;
-      //   let name = transaction[keyTransaction].$cache.name;
-      //   let indicatif = transaction[keyTransaction].$cache.indicatif;
-      //   let digit = transaction[keyTransaction].$cache.digit;
-      //   let currency = transaction[keyTransaction].$cache.currency;
-      //   console.log(
-      //     "🚀 ~ file: transactionSlice.ts:152 ~ Object.keys ~ transaction[keyTransaction]:",
-      //     transaction[keyTransaction]
-      //   );
-
-      //   let collecteDataCountry = {
-      //     id,
-      //     agencies,
-      //     allowCarte,
-      //     icon,
-      //     name,
-      //     indicatif,
-      //     digit,
-      //     currency,
-      //   };
-      // }
 
       Object.keys(transaction).forEach(async (keyTransaction) => {
-        if (keyTransaction === "agence") {
-          objTransactionData[keyTransaction] =
-            transaction[keyTransaction].$cache._id;
-          console.log(
-            "🚀 ~ file: transactionSlice.ts:183 ~ Object.keys ~ transaction[keyTransaction]:",
-            transaction[keyTransaction]
-          );
-        } else if (keyTransaction === "country") {
-          objTransactionData[keyTransaction] =
-            transaction[keyTransaction].$cache._id;
+        console.log(
+          "🚀 ~ file: transactionSlice.ts:183 ~ Object.keys ~ transaction[keyTransaction]:",
+          transaction[keyTransaction],
+          keyTransaction
+        );
+        if (
+          keyTransaction === "agenceSender" ||
+          keyTransaction === "agenceReceiver" ||
+          keyTransaction === "country" ||
+          keyTransaction === "manager"
+        ) {
+          objTransactionData[keyTransaction] = transaction[keyTransaction].$id;
+        } else if (keyTransaction === "discussion") {
+          objTransactionData["discussionId"] = transaction[keyTransaction].$id;
         } else if (
           keyTransaction === "__createdAt" ||
           keyTransaction === "__updatedAt"
@@ -214,11 +172,13 @@ async function createTransaction({
   const telephone = await transaction?.telephone;
   const carte = await transaction?.carte;
   const codePromo = await transaction?.codePromo;
-  const sum = await transaction?.sum;
+  const received = await transaction?.received;
+  const sent = await transaction?.sent;
   const receiverName = await transaction?.receiverName;
-  const agence = (await transaction?.agence)?.$id;
+  const agenceReceiver = (await transaction?.agenceReceiver)?.$id;
+  const agenceSender = (await transaction?.agenceSender)?.$id;
   const country = (await transaction?.country)?.$id;
-  const sender = (await transaction?.senderAccount)?.$id;
+  const senderAccount = (await transaction?.senderAccount)?.$id;
   const manager = (await transaction?.manager)?.$id;
   const discussionId = (await transaction?.discussion)?.$id;
   const status = await transaction?.status;
@@ -228,13 +188,15 @@ async function createTransaction({
     updatedAt,
     createdAt,
     receiverName,
-    sender,
+    senderAccount,
     manager,
     discussionId,
     status,
-    sum,
+    received,
+    sent,
     codePromo,
-    agence,
+    agenceSender,
+    agenceReceiver,
     carte,
     telephone,
     country,
@@ -293,24 +255,7 @@ export const startTransaction = createAsyncThunk<any, void>(
 export const updateTransaction = createAsyncThunk<any, updateTransactionSchema>(
   "transaction/update",
   async ({ data }, thunkAPI) => {
-    const { transactionId, transacData } = data;
-    console.log(
-      "🚀 ~ file: transactionSlice.ts:142 ~ transactionId, transacData:",
-      transactionId,
-      transacData
-    );
-    await SQuery.service("transaction", "full", {
-      id: transactionId,
-      sum: transacData.sum,
-      codePromo: transacData.codePromo,
-      receiverName: transacData.receiverName,
-      senderFile: transacData.senderFile,
-      country: transacData.country,
-      telephone: transacData.telephone,
-      carte: transacData.carte,
-      agence: transacData.agence,
-      typeTransaction: transacData.typeTransaction,
-    });
+    await SQuery.service("transaction", "full", data);
   }
 );
 export const fetchTransactions = createAsyncThunk<
@@ -400,35 +345,30 @@ export const transactionSlice = createSlice({
       const dataTransactions = action.payload as any as initialState[];
       console.log("🚀 ~ dataTransactions:", dataTransactions);
 
-      const [nextState, patches] = produceWithPatches(state, (draftState) => {
-        dataTransactions.forEach((transaction) => {
-          const status = Object.keys(transaction)[0] as
-            | "start"
-            | "run"
-            | "end"
-            | "cancel"
-            | "full";
+      dataTransactions.forEach((transaction) => {
+        const status = Object.keys(transaction)[0] as
+          | "start"
+          | "run"
+          | "end"
+          | "cancel"
+          | "full";
 
-          if (transaction[status]) {
-            if (!draftState[status]) {
-              draftState[status] = {};
-            }
-
-            Object.keys(transaction[status]).forEach((transactionId) => {
-              if (!draftState[status][transactionId]) {
-                draftState[status][transactionId] =
-                  transaction[status][transactionId];
-              }
-            });
-          }
-        });
-
-        draftState.fetchLoading = false;
-        draftState.fetchSuccess = true;
+        if (transaction[status]) {
+          state[status] = {
+            ...state[status],
+            ...transaction[status],
+          };
+          console.log(
+            "🚀 ~ file: transactionSlice.ts:369 ~ dataTransactions.forEach ~ transaction[status]:",
+            transaction[status]
+          );
+        }
       });
+
+      state.fetchLoading = false;
+      state.fetchSuccess = true;
+
       // state = applyPatches(state, patches);
-      console.log("🚀 ~ patches:", patches);
-      return nextState;
     },
     clearTransaction: (state, action) => {
       const { status, transactionId } = action.payload;
@@ -463,39 +403,26 @@ export const transactionSlice = createSlice({
     });
     builder.addCase(fetchTransactions.fulfilled, (state, action) => {
       const dataTransactions = action.payload as any as initialState[];
-
       console.log("🚀 ~ dataTransactions:", dataTransactions);
-      const [nextState, patches] = produceWithPatches(state, (draftState) => {
-        console.log(dataTransactions.length, "TAILLE");
 
-        dataTransactions.forEach((transaction) => {
-          const status = Object.keys(transaction)[0] as
-            | "start"
-            | "run"
-            | "end"
-            | "cancel"
-            | "full";
+      dataTransactions.forEach((transaction) => {
+        const status = Object.keys(transaction)[0] as
+          | "start"
+          | "run"
+          | "end"
+          | "cancel"
+          | "full";
 
-          if (transaction[status]) {
-            if (!draftState[status]) {
-              draftState[status] = {};
-            }
-
-            Object.keys(transaction[status]).forEach((transactionId) => {
-              if (!draftState[status][transactionId]) {
-                draftState[status][transactionId] =
-                  transaction[status][transactionId];
-              }
-            });
-          }
-        });
-
-        draftState.fetchLoading = false;
-        draftState.fetchSuccess = true;
+        if (transaction[status]) {
+          state[status] = {
+            ...state[status],
+            ...transaction[status],
+          };
+        }
       });
-      // state = applyPatches(state, patches);
-      console.log("🚀 ~ patches:88888", patches, nextState);
-      return nextState;
+
+      state.fetchLoading = false;
+      state.fetchSuccess = true;
     });
     builder.addCase(fetchTransactions.rejected, (state, action) => {
       state.fetchLoading = false;

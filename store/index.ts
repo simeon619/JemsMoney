@@ -21,6 +21,7 @@ import countrySlice from "./country/countrySlice";
 import entrepriseSlice from "./entreprise/entrepriseSlice";
 import messageSlice from "./message/messageSlice";
 import discussionSlice from "./messagerie/messagerieSlice";
+import preferenceSlice from "./preference/preferenceSlice";
 import transactionSlice from "./transaction/transactionSlice";
 // https://www.notjust.dev/blog/2022-12-24-react-native-redux-toolkit
 // https://github.com/rt2zz/redux-persist
@@ -54,6 +55,7 @@ const rootReducer = combineReducers({
   transation: transactionSlice,
   country: countrySlice,
   entreprise: entrepriseSlice,
+  preference: preferenceSlice,
 });
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 export const store = configureStore({

@@ -8,7 +8,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from "react-native-reanimated";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Colors from "../constants/Colors";
 import {
   horizontalScale,
@@ -16,16 +16,20 @@ import {
   shadow,
   verticalScale,
 } from "../fonctionUtilitaire/metrics";
-import { AppDispatch } from "../store";
+import { TransactionServer } from "../fonctionUtilitaire/type";
+import { AppDispatch, RootState } from "../store";
+import { addDiscussion } from "../store/message/messageSlice";
 import { startTransaction } from "../store/transaction/transactionSlice";
 const ButtonAdd = ({
   pathname,
   icon,
   hideButtonScroll,
+  dataSavedTransaction,
 }: {
   pathname: "/formTransaction" | "/discussion";
   icon: "plus" | "message";
   hideButtonScroll?: any;
+  dataSavedTransaction?: TransactionServer;
 }) => {
   const colorScheme = useColorScheme();
   const [isKeyboardVisible, setKeyboardVisible] = useState<boolean>(false);
@@ -33,7 +37,10 @@ const ButtonAdd = ({
   const handleKeyboardDidShow = () => {
     setKeyboardVisible(true);
   };
-
+  const [isClicked, setIsCliked] = useState(false);
+  const { discussions, loading, success } = useSelector(
+    (state: RootState) => state.message
+  );
   const handleKeyboardDidHide = () => {
     setKeyboardVisible(false);
   };
@@ -70,6 +77,34 @@ const ButtonAdd = ({
       ],
     };
   });
+  console.log(
+    "🚀 ~ file: ButtonAdd.tsx:34 ~ dataSavedTransaction:",
+    dataSavedTransaction
+  );
+
+  useEffect(() => {
+    console.log("1255555", dataSavedTransaction);
+    let Disc = Object.keys(discussions).find(
+      (discId) => discId === dataSavedTransaction?.discussionId
+    );
+    console.log(
+      "🚀 ~ file: ADDBUTTON.tsx:52 ~ useEffect ~ Disc:",
+      Disc,
+      isClicked,
+      success
+    );
+    if (Disc && isClicked && success) {
+      console.log("12555556", { Disc });
+      router.push({
+        pathname: "/discussion",
+        params: {
+          id: Disc,
+        },
+      });
+      setIsCliked(false);
+    }
+  }, [discussions, isClicked, success]);
+
   // console.log(hideButtonScroll);
 
   let router = useRouter();
@@ -99,10 +134,15 @@ const ButtonAdd = ({
               params: { type: "contact" },
             });
           } else {
-            router.push({
-              pathname,
-              // params: { type: "contact" },
-            });
+            if (dataSavedTransaction?.discussionId) {
+              router.push({
+                pathname,
+                params: { id: dataSavedTransaction.discussionId },
+              });
+            } else {
+              dispatch(addDiscussion(dataSavedTransaction?.id));
+              setIsCliked(true);
+            }
           }
         }}
       >

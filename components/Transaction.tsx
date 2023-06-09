@@ -38,7 +38,7 @@ const Transaction = () => {
       <Spinner
         visible={fetchLoading}
         textContent={"transaction is loading..."}
-        cancelable={false}
+        cancelable={true}
         overlayColor="#000a"
       />
       <MonoText
@@ -53,6 +53,7 @@ const Transaction = () => {
       <ScrollView
         contentContainerStyle={{ alignItems: "center" }}
         pagingEnabled={true}
+        scrollEventThrottle={16}
       >
         {transactionStatuses.map((status) => renderTransactions(status))}
       </ScrollView>

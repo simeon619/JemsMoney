@@ -58,7 +58,6 @@ export async function createInstanceFrom({ modelPath, id, Model }: any) {
   }
 
   SQuery.on("update:" + cache._id, async (data: any) => {
-    console.log("update:" + cache._id, data);
     cache = data.doc;
     Config.dataStore.setData(modelPath + ":" + id, cache);
     lastInstanceUpdateAt = data.doc.__updatedAt;
@@ -171,6 +170,7 @@ export async function createInstanceFrom({ modelPath, id, Model }: any) {
                     size: file.size,
                     type: file.type || file.mime,
                     buffer: await file.arrayBuffer(),
+                    encoding: "base64",
                     //*NEW_ADD encoding
                   };
                   files.push(fileData);

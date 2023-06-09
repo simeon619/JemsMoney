@@ -128,7 +128,7 @@ const fetchDiscussions = createAsyncThunk(
   }
 );
 
-export const discussionSlice = createSlice({
+const discussionSlice = createSlice({
   name: "discussion",
   initialState: { ...initialState },
   reducers: {
@@ -186,6 +186,6 @@ export const discussionSlice = createSlice({
   },
 });
 
-export const {} = discussionSlice.actions;
+// export const {} = discussionSlice.actions;
 
-export default discussionSlice.reducer;
+// export default discussionSlice.reducer;

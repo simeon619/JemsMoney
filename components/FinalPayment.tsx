@@ -10,6 +10,7 @@ import Animated from "react-native-reanimated";
 import {
   horizontalScale,
   moderateScale,
+  shadow,
   verticalScale,
 } from "../fonctionUtilitaire/metrics";
 import { TransactionServer } from "../fonctionUtilitaire/type";
@@ -22,51 +23,81 @@ const FinalPayment = ({
   scrollHandler: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
   dataSavedTransaction: TransactionServer | undefined;
 }) => {
-  const { width } = useWindowDimensions();
-  const recipientNumber = "+1234567890";
-  const amountReceived = "1000 EUR";
+  const { width, height } = useWindowDimensions();
 
   return (
-    <View style={styles.container}>
-      <View style={styles.iconContainer}>
-        <FontAwesome
-          name="clock-o"
-          size={100}
-          color="#F9A825"
-          style={styles.icon}
-        />
-        <MonoText style={styles.title}>Transaction Tracking</MonoText>
-      </View>
-
-      <Animated.ScrollView
-        showsVerticalScrollIndicator={false}
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        style={{ marginBottom: verticalScale(50) }}
-      >
-        <MonoText style={styles.description}>
-          Your transaction is currently being verified. Please wait while we
-          verify the details of your transaction.
-        </MonoText>
-        <MonoText style={styles.description}>
-          Once the verification is complete, we will inform you of the status of
-          your transaction.
-        </MonoText>
-        <View style={styles.recipientInfo}>
-          <MonoText style={styles.recipientText}>
-            The recipient will receive {dataSavedTransaction?.sum} on the
-            following number:{" "}
-            <MonoText style={styles.recipientNumber}>
-              {dataSavedTransaction?.telephone}
-            </MonoText>
-          </MonoText>
+    <>
+      {!!dataSavedTransaction?.receiverName && (
+        <View style={styles.container}>
+          <View
+            style={{
+              flex: 0.2,
+            }}
+          />
+          <View
+            style={[
+              {
+                // height: height / 2,
+                flex: 5,
+                borderWidth: 1,
+                borderColor: "#1254",
+                borderRadius: moderateScale(10),
+                overflow: "hidden",
+              },
+              shadow(20),
+            ]}
+          >
+            <Animated.ScrollView
+              showsVerticalScrollIndicator={true}
+              // onScroll={scrollHandler}
+              scrollEventThrottle={16}
+              alwaysBounceVertical={true}
+              // style={{ marginBottom: verticalScale(100) }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  gap: 5,
+                }}
+              >
+                <MonoText style={styles.title}>Transaction Tracking</MonoText>
+                <FontAwesome
+                  name="clock-o"
+                  size={22}
+                  color="#F9A825"
+                  style={styles.icon}
+                />
+              </View>
+              <MonoText style={styles.description}>
+                Your transaction is currently being verified. Please wait while
+                we verify the details of your transaction.
+              </MonoText>
+              <MonoText style={styles.description}>
+                Once the verification is complete, we will inform you of the
+                status of your transaction.
+              </MonoText>
+              <View style={styles.recipientInfo}>
+                <MonoText style={styles.recipientText}>
+                  The recipient will receive{" "}
+                  {dataSavedTransaction?.received.value}{" "}
+                  {dataSavedTransaction?.received.currency} on the following
+                  number:{" "}
+                  <MonoText style={styles.recipientNumber}>
+                    {dataSavedTransaction?.telephone}
+                  </MonoText>
+                </MonoText>
+              </View>
+              <MonoText style={styles.description}>
+                Please click on the icon below to chat with an agent if you have
+                any additional questions.
+              </MonoText>
+            </Animated.ScrollView>
+          </View>
+          <View style={{ flex: 1, backgroundColor: "transparent" }} />
         </View>
-        <MonoText style={styles.description}>
-          Please click on the icon below to chat with an agent if you have any
-          additional questions.
-        </MonoText>
-      </Animated.ScrollView>
-    </View>
+      )}
+    </>
   );
 };
 
@@ -77,10 +108,16 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     backgroundColor: "transparent",
-    // marginBottom: 5,
+    flex: 2,
+    // marginLeft: 50,
+    // alignItems: "center",
+    // position: "absolute",
   },
   icon: {
     alignSelf: "center",
+    // left: "10%",
+    // width: "100%",
+    // height: "100%",
   },
   recipientInfo: {
     marginVertical: verticalScale(20),
@@ -98,8 +135,8 @@ const styles = StyleSheet.create({
     color: "#F9A825",
   },
   title: {
-    fontSize: moderateScale(22),
-    // fontWeight: "bold",
+    fontSize: moderateScale(25),
+    fontWeight: "bold",
     color: "#F9A825",
     textAlign: "center",
     marginBottom: verticalScale(10),

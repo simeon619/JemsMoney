@@ -97,6 +97,10 @@ const createCountry = async ({ countryId }: { countryId: string }) => {
 export const fetchCountryAndAgencies = createAsyncThunk<any, void>(
   "country/fetch",
   async (_, thunkAPI) => {
+    // console.log(
+    //   "🚀 ~ file: countrySlice.ts:102 ~ acoountMakePreferences:",
+    //   telephone
+    // );
     try {
       return new Promise(async (resolve, reject) => {
         try {

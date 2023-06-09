@@ -14,6 +14,8 @@ import Transaction from "../../components/Transaction";
 import { AppDispatch, RootState } from "../../store";
 import { fetchCountryAndAgencies } from "../../store/country/countrySlice";
 import { fetchEntrepriseSlice } from "../../store/entreprise/entrepriseSlice";
+import { fetchMessages } from "../../store/message/messageSlice";
+import { setPreferences } from "../../store/preference/preferenceSlice";
 import { fetchTransactions } from "../../store/transaction/transactionSlice";
 import { PURGE_ALL_DATA } from "../_layout";
 
@@ -23,10 +25,31 @@ export default function Home() {
   const router = useRouter();
   const navigationState = useRootNavigationState();
   const dispatch: AppDispatch = useDispatch();
-  const { user, isAuthenticated } = useSelector(
+  const { user, isAuthenticated, account } = useSelector(
     (state: RootState) => state.auth
   );
+  let preference = useSelector((state: RootState) => state.preference);
 
+  let country = useSelector((state: RootState) => state.country);
+
+  useEffect(() => {
+    Object.keys(country).forEach((key) => {
+      if (account?.telephone?.startsWith(country[key].indicatif)) {
+        console.log(
+          "samedi54464564",
+          country[key].indicatif,
+          account.telephone
+        );
+        dispatch(
+          setPreferences({
+            ...preference,
+            country: { name: country[key].name, id: country[key].id },
+            currency: country[key].currency,
+          })
+        );
+      }
+    });
+  }, []);
   const animatedStyle = useAnimatedStyle(() => {
     const scale = interpolate(progress.value, [0, 1], [1, 1.05], "clamp");
     return {
@@ -36,11 +59,12 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    console.log("423658785525255559522");
+    console.log("4656454564654654");
 
     dispatch(fetchTransactions());
     dispatch(fetchEntrepriseSlice());
     dispatch(fetchCountryAndAgencies());
+    dispatch(fetchMessages());
   }, []);
 
   useEffect(() => {

@@ -197,15 +197,20 @@ const SQuery = {
     return Config.dataStore;
   },
 
-  service: async (ctrl: string, service: string, data: any) => {
+  service: async (ctrl: string, service: string, data: any): Promise<any> => {
     return await new Promise((rev) => {
       SQuery.emit(
         ctrl + ":" + service,
         data,
-        async (res: { error: any; response: unknown }) => {
+        async (res: { error: any; response: any }) => {
           if (res.error) {
             rev(null);
-            throw new Error(JSON.stringify(res));
+            // throw new Error(JSON.stringify(res));
+            console.log(
+              "🚀 ~ file: SQueryClient.ts:209 ~ JSON.stringify(res):",
+              JSON.stringify(res)
+            );
+            return;
           }
           rev(res.response);
         }

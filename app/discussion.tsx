@@ -40,17 +40,20 @@ import { useDispatch, useSelector } from "react-redux";
 import ImageRatio from "../components/ImageRatio";
 import InstanceAudio from "../components/InstanceAudio";
 import { MonoText } from "../components/StyledText";
-import { View } from "../components/Themed";
+import { Text, View } from "../components/Themed";
 import Colors from "../constants/Colors";
 import { HOST } from "../constants/data";
+import { formatDate } from "../fonctionUtilitaire/date";
 import {
   horizontalScale,
   moderateScale,
   verticalScale,
 } from "../fonctionUtilitaire/metrics";
+import { isObjectNotEmpty } from "../fonctionUtilitaire/utils";
 import { AppDispatch, RootState } from "../store";
 import {
   MessageDataSchema,
+  MessageSchema,
   addMessage,
   fetchMessages,
 } from "../store/message/messageSlice";
@@ -76,24 +79,38 @@ const discussion = () => {
   const [recording, setRecording] = useState<Audio.Recording>();
 
   const dispatch: AppDispatch = useDispatch();
-  const id = params.id as string;
+  const id = useRef<string>(params.id as string).current;
+  const [messages, setMessages] = useState<MessageSchema>({});
 
-  const Messages = useSelector((state: RootState) => state.message);
   console.log(
-    "🚀 ~ file: discussion.tsx:83 ~ discussion ~ Messsages:",
-    Messages
+    "🚀 ~ file: discussion.tsx:8780 ~ discussion ~ id:",
+    id,
+    typeof id
   );
 
-  // useEffect(() => {
-  //   if (!Messages[id] && Messages[id]?.messages) {
-  //     Messages[id] = {
-  //       messages: {},
-  //       loading: false,
-  //       success: false,
-  //     };
-  //   }
-  // }, []);
+  const { discussions, loading, success } = useSelector(
+    (state: RootState) => state.message
+  );
+  console.log(
+    "🚀 ~ file: discussion.tsx:83 ~ discussion ~ Messsages:",
+    discussions
+  );
 
+  useEffect(() => {
+    if (!discussions[id]) {
+      setMessages({});
+    } else {
+      setMessages(discussions[id]);
+      console.log(
+        "🚀 ~ file: discussion.tsx:105 ~ useEffect ~ discussions:",
+        discussions
+      );
+    }
+  }, [discussions]);
+  // console.log(Object.values(messages), "gfdg5df4g54gdf");
+  Object.keys(messages).forEach((key) => {
+    console.log(key, "@kjfkdfjkdhf565965@@@@@@");
+  });
   const regex = new RegExp(/[^\s\r\n]/g);
 
   async function startRecording() {
@@ -261,8 +278,14 @@ const discussion = () => {
     };
   });
   const scrollViewRef = useRef<FlatList>(null);
-
+  // const scrollToIndex = (index: number) => {
+  //   scrollViewRef.current?.scrollToIndex({ index, animated: true });
+  // };
   useLayoutEffect(() => {
+    // scrollViewRef.current?.scrollToOffset({
+    //   offset: -1,
+    //   animated: true,
+    // });
     scrollViewRef.current?.scrollToEnd({ animated: true });
   }, []);
 
@@ -281,7 +304,6 @@ const discussion = () => {
         if (Math.abs(updatedValue) > TRESHOLD_SLIDE) {
           // runOnJS(callMyFunction)(ctx.uid);
           runOnJS(setArgs)(ctx.uid);
-          // runOnJS(resetPath)();
           x.value = withSpring(0, { velocity: 0, stiffness: 300 });
         } else {
           x.value = withSpring(updatedValue, { velocity: 0, stiffness: 300 });
@@ -426,7 +448,8 @@ const discussion = () => {
               </MonoText>
             </View>
           </View>
-          <View
+          <Pressable
+            // onPress={() => scrollToIndex(2)}
             style={{
               flexDirection: "row",
               backgroundColor: Colors[colorSheme ?? "light"].secondaryColour,
@@ -440,37 +463,38 @@ const discussion = () => {
               size={25}
               color={Colors[colorSheme ?? "light"].textOverlay}
             />
-          </View>
+          </Pressable>
         </View>
-        {/* 
+
         <FlatList
-          data={Object.values(Messages[id]?.messages)}
+          data={messages ? Object.values(messages) : undefined}
           renderItem={({ item }) => <MessageItem item={item} />}
-          keyExtractor={(item) => item.messageId}
+          keyExtractor={(item) => item?.messageId}
           // onScroll={handleScroll}
           keyboardShouldPersistTaps="always"
           contentContainerStyle={{
             flexGrow: 1,
-            backgroundColor: "#fff",
-            justifyContent: "flex-end",
-            marginBottom: verticalScale(150),
+            backgroundColor: "transparent",
+            // justifyContent: "flex-end",
           }}
-          // style={{
-          //   marginBottom: keyboardOffset,
-          // }}
+          // inverted={true}
           ref={scrollViewRef}
           onContentSizeChange={() => {
             scrollViewRef.current?.scrollToEnd({ animated: true });
+            // scrollViewRef.current?.scrollToOffset({
+            //   offset: -1,
+            //   animated: true,
+            // });
           }}
           ListFooterComponent={() => (
             <View
               style={{
-                height: verticalScale(60),
-                backgroundColor: "#fff",
+                height: verticalScale(70),
+                backgroundColor: "transparent",
               }}
             />
           )}
-        /> */}
+        />
         <View
           style={{
             flexDirection: "row",
@@ -481,7 +505,6 @@ const discussion = () => {
             paddingVertical: horizontalScale(10),
             paddingBottom: verticalScale(10),
             bottom: 0,
-            flex: 1,
             backgroundColor: Colors[colorSheme ?? "light"].secondaryColour,
           }}
         >
@@ -605,6 +628,7 @@ const discussion = () => {
                           messageText: text,
                         })
                       );
+                      setText("");
                     }
                   }}
                 >
@@ -667,98 +691,112 @@ const discussion = () => {
   );
 };
 const MessageItem = memo(({ item }: { item: MessageDataSchema }) => {
-  console.log({ item });
+  console.log(item, "dkjksqhdkjqshduiqsgiudgqs");
 
   return (
-    <TouchableOpacity
-      onPress={(e) => {}}
-      onLongPress={() => {
-        console.log("ya koi");
-      }}
-      style={[
-        {
-          padding: moderateScale(5),
-
-          margin: 10,
-          maxWidth: "80%",
-          flexDirection: "row",
-          columnGap: 4,
-          elevation: 99,
-        },
-        item.right
-          ? {
-              alignSelf: "flex-end",
-              backgroundColor: "#dff",
-              // borderTopLeftRadius: 10,
-              borderTopLeftRadius: 10,
-              borderBottomLeftRadius: 10,
-              borderBottomRightRadius: 10,
-            }
-          : {
-              alignSelf: "flex-start",
-              backgroundColor: "#fff",
-              borderTopRightRadius: 10,
-              borderBottomLeftRadius: 10,
-              borderBottomRightRadius: 10,
+    <>
+      {isObjectNotEmpty(item) && (
+        <TouchableOpacity
+          onPress={(e) => {}}
+          onLongPress={() => {
+            console.log("ya koi");
+          }}
+          style={[
+            {
+              padding: moderateScale(5),
+              margin: 10,
+              maxWidth: "80%",
+              flexDirection: "column",
+              // gap: 4,
+              elevation: 99,
             },
-      ]}
-    >
-      <View
-        style={{
-          flexDirection: "column",
-          // overflow: "hidden",
-          backgroundColor: "#0000",
-          // gap: 10,
-        }}
-      >
-        {item.text ? (
-          <MonoText
+            item?.right
+              ? {
+                  alignSelf: "flex-end",
+                  backgroundColor: "#458",
+                  // borderTopLeftRadius: 10,
+                  borderTopLeftRadius: 15,
+                  borderBottomLeftRadius: 15,
+                  borderBottomRightRadius: 15,
+                }
+              : {
+                  alignSelf: "flex-start",
+                  backgroundColor: "#384",
+                  borderTopRightRadius: 10,
+                  borderBottomLeftRadius: 10,
+                  borderBottomRightRadius: 10,
+                },
+          ]}
+        >
+          <View
             style={{
-              fontSize: moderateScale(15),
-              fontFamily: "Roboto-Regular",
-              color: "#444",
+              flexDirection: "column",
+              // overflow: "hidden",
+              backgroundColor: "#0000",
             }}
           >
-            {item.text}
+            {item?.text ? (
+              <Text
+                style={{
+                  fontSize: moderateScale(17),
+                  color: "#fef",
+                }}
+              >
+                {item?.text}
+              </Text>
+            ) : (
+              item?.files?.map((file, i) => {
+                let type = "image";
+                if (
+                  file.extension === "jpeg" ||
+                  file.extension === "jpg" ||
+                  file.extension === "png"
+                ) {
+                  type = "image";
+                } else if (
+                  file.extension === "m4a" ||
+                  file.extension === "mp3"
+                ) {
+                  type = "audio";
+                }
+                if (type === "image")
+                  return (
+                    // <View key={i}></View>
+                    <ImageRatio uri={HOST + file.url} key={i} ratio={2} />
+                    // <Image
+                    //   key={file}
+                    //   contentFit="contain"
+                    //   source={{ uri: HOST + file }}
+                    //   style={{
+                    //     width: "100%",
+                    //     height: undefined,
+                    //     aspectRatio: 3 / 2,
+                    //   }}
+                    //   onLoad={handleImageLoad}
+                    // />
+                    // <ImageScall
+                    //   width={Dimensions.get("window").width} // height will be calculated automatically
+                    //   source={{ uri: HOST + file }}
+                    // />
+                  );
+                if (type === "audio")
+                  return <InstanceAudio voiceUrl={file.url} key={i} />;
+              })
+            )}
+          </View>
+          <MonoText
+            style={{
+              color: "#ae9",
+              textAlign: "right",
+              fontWeight: "800",
+              fontSize: moderateScale(12),
+            }}
+          >
+            {formatDate(item?.date)}
           </MonoText>
-        ) : (
-          item.files.map((file, i) => {
-            let ext = file.split(".").pop();
-            console.log({ ext });
-            let type = "";
-            if (ext === "jpeg" || ext === "jpg" || ext === "png") {
-              type = "image";
-            } else if (ext === "m4a" || ext === "mp3") {
-              type = "audio";
-            }
-            console.log(file);
-
-            if (type === "image")
-              return (
-                // <View key={i}></View>
-                <ImageRatio uri={HOST + file} key={i} ratio={2} />
-                // <Image
-                //   key={file}
-                //   contentFit="contain"
-                //   source={{ uri: HOST + file }}
-                //   style={{
-                //     width: "100%",
-                //     height: undefined,
-                //     aspectRatio: 3 / 2,
-                //   }}
-                //   onLoad={handleImageLoad}
-                // />
-                // <ImageScall
-                //   width={Dimensions.get("window").width} // height will be calculated automatically
-                //   source={{ uri: HOST + file }}
-                // />
-              );
-            if (type === "audio")
-              return <InstanceAudio voiceUrl={file} key={i} />;
-          })
-        )}
-      </View>
-    </TouchableOpacity>
+        </TouchableOpacity>
+      )}
+    </>
   );
 });
 export default discussion;
