@@ -27,10 +27,6 @@ export const unstable_settingss = {
 let persistor = persistStore(store);
 
 export const PURGE_ALL_DATA = async () => {
-  console.log(
-    "🚀 ~ file: _layout.tsx:30 ~ constPURGE_ALL_DATA= ~ PURGE_ALL_DATA:",
-    PURGE_ALL_DATA
-  );
   persistor.pause();
   persistor.flush().then(() => {
     return persistor.purge();
@@ -38,7 +34,7 @@ export const PURGE_ALL_DATA = async () => {
 };
 export const persistanceSquery = () => {
   SQuery.dataStore = {
-    useStore: false,
+    useStore: true,
     updateTimeOut: 500,
     setData: async (key, data) => {
       try {
@@ -94,7 +90,10 @@ function RootLayoutNav({ style }: any) {
           <MagicModalPortal />
           <SafeAreaProvider>
             <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="(tabs)"
+                options={{ headerShown: false, animation: "flip" }}
+              />
               <Stack.Screen
                 name="modal"
                 options={{
@@ -136,7 +135,6 @@ function RootLayoutNav({ style }: any) {
                   animation: "slide_from_bottom",
                 }}
               />
-
               <Stack.Screen
                 name="register/login"
                 options={{
@@ -147,7 +145,6 @@ function RootLayoutNav({ style }: any) {
                   animation: "flip",
                 }}
               />
-
               <Stack.Screen
                 name="register/signup"
                 options={{
@@ -155,6 +152,71 @@ function RootLayoutNav({ style }: any) {
                   headerShown: false,
                   headerTitle: "",
                   animation: "flip",
+                }}
+              />
+              <Stack.Screen
+                name="preference/AddCountry"
+                options={{
+                  presentation: "modal",
+                  headerShown: false,
+                  animation: "simple_push",
+                }}
+              />
+              <Stack.Screen
+                name="preference/ListCountry"
+                options={{
+                  presentation: "modal",
+                  headerShown: false,
+                  animation: "simple_push",
+                }}
+              />
+              <Stack.Screen
+                name="preference/ListTaux"
+                options={{
+                  presentation: "modal",
+                  headerShown: false,
+                  animation: "simple_push",
+                }}
+              />
+              <Stack.Screen
+                name="preference/SetCountry"
+                options={{
+                  presentation: "modal",
+                  headerShown: false,
+                  animation: "simple_push",
+                }}
+              />
+              <Stack.Screen
+                name="preference/SetAgence"
+                options={{
+                  presentation: "modal",
+                  headerShown: false,
+                  animation: "simple_push",
+                }}
+              />
+
+              <Stack.Screen
+                name="preference/SetManager"
+                options={{
+                  presentation: "modal",
+                  headerShown: false,
+                  animation: "simple_push",
+                }}
+              />
+              <Stack.Screen
+                name="preference/AddAgence"
+                options={{
+                  presentation: "modal",
+                  headerShown: false,
+                  animation: "simple_push",
+                }}
+              />
+              <Stack.Screen
+                name="preference/AddManager"
+                options={{
+                  presentation: "modal",
+                  headerShown: false,
+                  animation: "simple_push",
                 }}
               />
             </Stack>

@@ -12,7 +12,18 @@ type Instance = {
   $cache: { [Pr: string]: any };
   newParentInstance: () => Promise<Instance | null>;
   extractor: (extractorPath: string) => Promise<Instance | null>;
-  update: (data: { id: string; [property: string]: any }) => Promise<void>;
+  update: (data: {
+    remove?: string[];
+    addId?: string[];
+    addNew?: any[];
+    paging?: {
+      query?: any;
+      select?: string;
+      sort?: { [key: string]: number }[];
+      limit?: number;
+      page?: number;
+    };
+  }) => Promise<void>;
   when: (
     event: string,
     listener: listenerSchema,
@@ -126,6 +137,7 @@ export async function createModelFrom(modelPath: string): Promise<ModelSchema> {
     return parentInstance;
   };
   Model.update = async (data: any): Promise<any> => {
+    console.log("🚀 ~ file: Model.ts:129 ~ Model.update= ~ data:", data);
     const result = await Validator(description, data);
     if (result.value == undefined) {
       // await emitRefresh([property])
@@ -139,7 +151,11 @@ export async function createModelFrom(modelPath: string): Promise<ModelSchema> {
               console.error(res);
               return rev(null);
             }
-            ////*console.log('*************', { modelPath, id: res.response, description });
+            console.log("*************", {
+              modelPath,
+              id: res.response,
+              description,
+            });
             rev(createInstanceFrom({ modelPath, id: res.response, Model }));
             //restCarte.text.value = JSON.stringify(res);
           } catch (e) {

@@ -182,6 +182,10 @@ export async function createArrayInstanceFrom({
     return await refresh();
   };
   arrayInstance.update = async (options: any) => {
+    console.log(
+      "🚀 ~ file: ArrayInstance.ts:185 ~ arrayInstance.update= ~ options:",
+      options
+    );
     return await refresh({ ...options });
   };
   arrayInstance.when = (

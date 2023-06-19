@@ -31,6 +31,7 @@ import {
 import { TransactionServer } from "../fonctionUtilitaire/type";
 import { RootState } from "../store";
 import { Agency } from "../store/country/countrySlice";
+
 export type valuePassSchema = {
   pays: string;
   valid: boolean;

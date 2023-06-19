@@ -188,4 +188,4 @@ const discussionSlice = createSlice({
 
 // export const {} = discussionSlice.actions;
 
-// export default discussionSlice.reducer;
+export default discussionSlice.reducer;

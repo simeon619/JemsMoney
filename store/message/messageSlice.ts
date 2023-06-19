@@ -24,13 +24,11 @@ export type MessageSchema =
 interface DiscussionsState {
   [discussionId: string]: MessageSchema;
 }
-
 interface initialState {
   discussions: DiscussionsState;
   loading: boolean;
   success: boolean;
 }
-
 const initialState: initialState = {
   loading: false,
   success: false,
@@ -373,6 +371,5 @@ export const messageSlice = createSlice({
     });
   },
 });
-export const {} = messageSlice.actions;
 
 export default messageSlice.reducer;

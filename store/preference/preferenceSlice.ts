@@ -5,14 +5,16 @@ let initialState: {
   language: string;
   darkMode: boolean;
   currency: string;
+  password: string;
   name: string;
-  country: { name: string; id: string };
+  Ccountry: { name: string; id: string };
 } = {
   language: "francais",
   darkMode: false,
   currency: "RUB",
   name: "jean",
-  country: { id: "", name: "" },
+  password: "password",
+  Ccountry: { id: "", name: "" },
 };
 const preferenceSlice = createSlice({
   name: "preference",
@@ -26,7 +28,7 @@ const preferenceSlice = createSlice({
       state.currency = value.currency;
       state.language = value.language;
       state.name = value.name;
-      state.country = value.country;
+      state.Ccountry = value.country;
     },
   },
 

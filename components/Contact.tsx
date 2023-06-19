@@ -23,10 +23,10 @@ import {
   shadow,
   verticalScale,
 } from "../fonctionUtilitaire/metrics";
-import { TransactionServer } from "../fonctionUtilitaire/type";
 import { AppDispatch, RootState } from "../store";
 import { Agency } from "../store/country/countrySlice";
-import { updateTransaction } from "../store/transaction/transactionSlice";
+
+import { TransactionServer } from "../fonctionUtilitaire/type";
 import { MonoText } from "./StyledText";
 import { ScrollView, Text, View } from "./Themed";
 
@@ -487,16 +487,6 @@ const Contact = ({
   function verifyAndNext(): void {
     let realNumber = country[countryId]?.indicatif + number;
     const phoneNumber = parsePhoneNumberFromString(realNumber);
-    console.log(
-      "🚀 ~ file: Contact.tsx:384 ~ verifyAndNext ~ phoneNumber:",
-      phoneNumber?.formatInternational()
-    );
-    //  received :{ value : formatAmount(montant - taxes).replace(",00", ""), currency : currencyReceiver}
-    //  sent :{ value : amount.replace(/\s/g, "") , currency : currentCurrency}
-    const nameRegex = /^[A-Za-z]+$/;
-    // let testAgence =
-    //   agence?.name === "ORANGE MONEY" || agence === "MTN MONEY" || agence === "WAVE";
-    // let testName = /^[a-zA-ZÀ-ÖØ-öø-ſÇ-üŸ-ÿ\s-]+$/.test(name) || /^[а-яА-ЯёЁ]+$/.test(name);
 
     if (!!agenceSender?.name && !!agenceSender?.name && name?.length >= 3) {
       // changeTOProofPayment(amount, 1, agence, currentCurrency);
@@ -508,30 +498,6 @@ const Contact = ({
         },
         1,
         agenceSender
-      );
-      dispatch(
-        updateTransaction({
-          data: {
-            telephone: realNumber.replace(/\s/g, ""),
-            agenceReceiver: agenceReceiver?.id,
-            agenceSender: agenceSender.id,
-            country: countryId,
-            received: {
-              value: +amountReceived.replace(/\s/g, ""),
-              currency: currencyReceiver,
-            },
-            sent: {
-              value: +amount.replace(/\s/g, ""),
-              currency: currentCurrency,
-            },
-            receiverName: name,
-            carte: cardSb,
-            codePromo: "jems545",
-            typeTransaction: !!cardSb ? "carte" : "number",
-            id: transactionId,
-            // typeTransaction: "agence",
-          },
-        })
       );
       console.log(
         "🚀 ~ file: Contact.tsx:218 ~ verifyAndNext ~ transactionId:",
@@ -775,10 +741,6 @@ const Contact = ({
               }}
               style={[
                 {
-                  //   flex: 3,
-                  // justifyContent: "center",
-                  // alignItems: "center",
-                  // paddingHorizontal: horizontalScale(0),
                   borderRadius: 10,
                   margin: verticalScale(8),
                   flexDirection: "row",
@@ -970,10 +932,6 @@ const Contact = ({
             }}
             style={[
               {
-                //   flex: 3,
-                // justifyContent: "center",
-                // alignItems: "center",
-                // paddingHorizontal: horizontalScale(0),
                 borderRadius: 10,
                 margin: verticalScale(8),
                 flexDirection: "row",

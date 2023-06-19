@@ -124,7 +124,7 @@ const TransactionItem = ({
                 numberOfLines={1}
                 style={{ fontSize: moderateScale(18), fontWeight: "400" }}
               >
-                {dataTransaction?.receiverName}
+                {dataTransaction?.senderAccount?.name}
               </MonoText>
               <MonoText
                 style={[
@@ -224,7 +224,7 @@ const TransactionItem = ({
             textAlign: "center",
           }}
         >
-          Go discust with a agent!
+          Go discust !
         </MonoText>
         <Entypo name="message" size={26} color={"#fff"} />
       </TouchableOpacity>

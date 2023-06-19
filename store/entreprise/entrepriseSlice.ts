@@ -22,9 +22,57 @@ export const fetchEntrepriseSlice = createAsyncThunk<any, void>(
             id: ID_ENTREPRISE,
           });
           let serviceCharge = await entrepriseInstance?.serviceCharge;
+          console.log(
+            "🚀 ~ file: entrepriseSlice.ts:25 ~ returnnewPromise ~ entrepriseInstance?.serviceCharge:",
+            entrepriseInstance?.serviceCharge
+          );
           let rates = await entrepriseInstance?.rates;
 
           resolve({ rates, serviceCharge });
+        } catch (error) {
+          reject(error);
+        }
+      });
+    } catch (error: any) {
+      thunkAPI.rejectWithValue(error);
+    }
+  }
+);
+export const updateRate = createAsyncThunk<any, { [str: string]: number }>(
+  "entreprise/rates",
+  async (data, thunkAPI) => {
+    try {
+      return new Promise(async (resolve, reject) => {
+        try {
+          const entrepriseInstance = await SQuery.newInstance("entreprise", {
+            id: ID_ENTREPRISE,
+          });
+          if (entrepriseInstance?.rates) {
+            entrepriseInstance.rates = data;
+          }
+          // resolve({ rates });
+        } catch (error) {
+          reject(error);
+        }
+      });
+    } catch (error: any) {
+      thunkAPI.rejectWithValue(error);
+    }
+  }
+);
+export const updateCharges = createAsyncThunk<any, number>(
+  "entreprise/rates",
+  async (data, thunkAPI) => {
+    try {
+      return new Promise(async (resolve, reject) => {
+        try {
+          const entrepriseInstance = await SQuery.newInstance("entreprise", {
+            id: ID_ENTREPRISE,
+          });
+          if (entrepriseInstance?.charges) {
+            entrepriseInstance.charges = data;
+          }
+          // resolve({ rates });
         } catch (error) {
           reject(error);
         }

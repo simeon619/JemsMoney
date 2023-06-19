@@ -1,21 +1,15 @@
-import { FontAwesome5, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Image } from "expo-image";
+import { FontAwesome5 } from "@expo/vector-icons";
+
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import {
-  FlatList,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Switch,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-} from "react-native";
+import { Pressable, StyleSheet, Switch, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useDispatch, useSelector } from "react-redux";
 import { MonoText } from "../../components/StyledText";
 import { ScrollView, View } from "../../components/Themed";
 
-import { useRouter } from "expo-router";
-import { useDispatch, useSelector } from "react-redux";
+import { SearchCountry } from "../../components/preference/SearchCountry";
+import { SetFee } from "../../components/preference/setFee";
 import {
   horizontalScale,
   moderateScale,
@@ -25,21 +19,67 @@ import { RootState } from "../../store";
 import { setPreferences } from "../../store/preference/preferenceSlice";
 const SECTIONS = [
   {
-    header: "Profile",
+    header: "Profile Admin",
     items: [
       { id: "name", icon: "user", label: "name", type: "select" },
-      { id: "country", icon: "flag", label: "country", type: "select" },
+      {
+        id: "password",
+        icon: "lock",
+        label: "mot de passe",
+        type: "select",
+      },
+
       // { id: "phone", icon: "phone", label: "phone", type: "select" },
     ],
   },
   {
-    header: "Preferences",
+    header: "Preferences Entreprise",
+    items: [
+      {
+        id: "taux",
+        icon: "money-bill-wave",
+        label: "Taux de changes",
+        type: "modal-input",
+      },
+      {
+        id: "manager",
+        icon: "users-cog",
+        label: "Gestion manager",
+        type: "modal-input",
+      },
+      {
+        id: "fee",
+        icon: "percent",
+        label: "modifier frais",
+        type: "modal-input",
+      },
+    ],
+  },
+  {
+    header: "Preferences Pays",
+    items: [
+      {
+        id: "Ccountry",
+        icon: "flag",
+        label: "Add pays",
+        type: "modal-input",
+      },
+      {
+        id: "RUDcountry",
+        icon: "flag",
+        label: "Modifier/Supprimer pays",
+        type: "modal-input",
+      },
+    ],
+  },
+  {
+    header: "Preferences Application",
     items: [
       { id: "language", icon: "globe", label: "Language", type: "select" },
-      { id: "currency", icon: "money-bill", label: "Currency", type: "select" },
       { id: "darkMode", icon: "moon", label: "Dark Mode", type: "toggle" },
     ],
   },
+
   {
     header: "Help",
     items: [{ id: "bug", icon: "bug", label: "Report Bug", type: "link" }],
@@ -49,67 +89,23 @@ const SECTIONS = [
 const PreferenceScreen = () => {
   const dispatch = useDispatch();
   let preference = useSelector((state: RootState) => state.preference);
-  let rates = useSelector((state: RootState) => state.entreprise.rates);
-  console.log({ preference });
-  const country = useSelector((state: RootState) => state.country);
+  useSelector((state: RootState) => state.entreprise.rates);
+
   let route = useRouter();
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisibleCountry, setModalVisibleCountry] = useState(false);
 
-  const openModal = () => {
-    setModalVisible(true);
-  };
-
-  const closeModal = () => {
-    setModalVisible(false);
+  const toggleModalCountry = () => {
+    setModalVisibleCountry((p) => !p);
   };
 
-  const renderItem = ({ item }: { item: any }) => {
-    const countr = country[item];
-    if (!countr?.name) {
-      return <></>;
-    }
-    return (
-      <TouchableOpacity
-        onPress={() => {
-          dispatch(
-            setPreferences({
-              ...preference,
-              country: { name: countr.name, id: countr.id },
-              currency: countr.currency,
-            })
-          );
-          closeModal();
-        }}
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingVertical: verticalScale(15),
-        }}
-      >
-        <Image
-          source={countr?.icon}
-          contentFit="contain"
-          style={{
-            width: horizontalScale(30),
-            height: verticalScale(30),
-            marginRight: 5,
-            // paddingVertical: moderateScale(15),
-          }}
-        />
-        <MonoText style={{ fontSize: moderateScale(18) }}>
-          {countr?.name}
-        </MonoText>
-        <MonoText style={{ marginLeft: 10 }}>{countr?.indicatif}</MonoText>
-      </TouchableOpacity>
-    );
-  };
+  const [modalVisibleFee, setModalVisibleFee] = useState(false);
 
-  const handleBackdropPress = () => {
-    closeModal();
+  const toggleModalFee = () => {
+    setModalVisibleFee((p) => !p);
   };
-  const handleModalPress = () => {
-    // Do Nothing
-  };
+  const { loading, serviceCharge, rates, success } = useSelector(
+    (state: RootState) => state.entreprise
+  );
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View
@@ -117,52 +113,28 @@ const PreferenceScreen = () => {
           flexDirection: "row",
           alignItems: "center",
           gap: horizontalScale(5),
-          marginLeft: horizontalScale(18),
+          // marginLeft: horizontalScale(18),
         }}
       >
-        <Modal
-          visible={modalVisible}
-          animationType="fade"
-          transparent={true}
-          onRequestClose={closeModal}
-        >
-          <TouchableWithoutFeedback onPress={handleBackdropPress}>
-            <View style={styles.modalContainer}>
-              <TouchableWithoutFeedback onPress={handleModalPress}>
-                <View
-                  style={{
-                    position: "absolute",
-                    left: 5,
-                    right: 5,
-                    bottom: 1,
-                    padding: moderateScale(10),
-                    borderRadius: 10,
-                    // backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  }}
-                >
-                  <FlatList
-                    //@ts-ignore
-                    data={Object.keys(country)}
-                    renderItem={renderItem}
-                    keyExtractor={(item) => item}
-                  />
-                </View>
-              </TouchableWithoutFeedback>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
+        <SearchCountry
+          closeModal={toggleModalCountry}
+          modalVisible={modalVisibleCountry}
+        />
+        <SetFee closeModal={toggleModalFee} modalVisible={modalVisibleFee} />
+        {/* <CountryModal closeModal={closeModal} modalVisible={modalVisible} /> */}
         <Pressable
           onPress={() => {
             route.back();
           }}
         >
           {({ pressed }) => (
-            <MaterialCommunityIcons
+            <FontAwesome5
               name="arrow-left"
-              color={"#333"}
-              size={28}
+              color={"#444b"}
+              size={26}
               style={{
                 opacity: pressed ? 0.5 : 1,
+                paddingHorizontal: moderateScale(10),
               }}
             />
           )}
@@ -196,16 +168,21 @@ const PreferenceScreen = () => {
                     >
                       <TouchableOpacity
                         onPress={() => {
-                          // if (id === "currency") {
-                          //   magicModal.show(() => <SetCurrencyModal />);
-                          // }
-                          if (id === "country") {
-                            console.log("offrir");
-                            // magicModal.show(() => <Setcountry />);
-                            openModal();
+                          if (id === "Ccountry") {
+                            toggleModalCountry();
                           }
-
-                          console.log(id);
+                          if (id === "manager") {
+                            route.push("preference/SetManager");
+                          }
+                          if (id === "RUDcountry") {
+                            route.push("preference/ListCountry");
+                          }
+                          if (id === "taux") {
+                            route.push("preference/ListTaux");
+                          }
+                          if (id === "fee") {
+                            toggleModalFee();
+                          }
                         }}
                       >
                         <View style={styles.row}>
@@ -213,7 +190,7 @@ const PreferenceScreen = () => {
                             color="#616161"
                             name={icon}
                             style={styles.rowIcon}
-                            size={22}
+                            size={18}
                           />
 
                           <MonoText style={styles.rowLabel}>{label}</MonoText>
@@ -226,7 +203,7 @@ const PreferenceScreen = () => {
                               numberOfLines={1}
                               style={styles.rowValue}
                             >
-                              {id === "country"
+                              {id === "Ccountry"
                                 ? preference[id]?.name
                                 : //@ts-ignore
                                   preference[id]}
@@ -235,6 +212,7 @@ const PreferenceScreen = () => {
 
                           {type === "toggle" && (
                             <Switch
+                              thumbColor={"#426"}
                               onChange={(val) => {
                                 dispatch(
                                   setPreferences({
@@ -247,12 +225,18 @@ const PreferenceScreen = () => {
                               value={preference[id]}
                             />
                           )}
-
+                          {type === "modal-input" && (
+                            <FontAwesome5
+                              color="#ababab"
+                              name="plus-circle"
+                              size={20}
+                            />
+                          )}
                           {(type === "select" || type === "link") && (
                             <FontAwesome5
                               color="#ababab"
                               name="chevron-right"
-                              size={22}
+                              size={20}
                             />
                           )}
                         </View>
@@ -314,8 +298,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   sectionHeaderText: {
-    fontSize: moderateScale(16),
-    fontWeight: "600",
+    fontSize: moderateScale(15),
+    fontWeight: "900",
 
     textTransform: "uppercase",
     letterSpacing: 1.2,
@@ -349,11 +333,6 @@ const styles = StyleSheet.create({
     // borderBottomWidth: 1,
     // borderColor: "#e3e3e3",
   },
-  profileAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 9999,
-  },
   profileName: {
     marginTop: 12,
     fontSize: 20,
@@ -369,7 +348,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-start",
     paddingRight: 24,
-    height: 50,
+    paddingVertical: verticalScale(10),
   },
   rowWrapper: {
     paddingLeft: 24,
@@ -381,12 +360,12 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   rowLabel: {
-    fontSize: 17,
+    fontSize: moderateScale(16),
     fontWeight: "500",
     color: "#000",
   },
   rowValue: {
-    fontSize: 17,
+    fontSize: moderateScale(16),
     color: "#616161",
     width: horizontalScale(120),
     marginRight: 4,
@@ -395,7 +374,6 @@ const styles = StyleSheet.create({
   },
   rowSpacer: {
     flexGrow: 1,
-    flexShrink: 1,
     flexBasis: 0,
   },
 });

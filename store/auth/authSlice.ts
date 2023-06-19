@@ -23,92 +23,33 @@ const initialState: {
   loading: false,
 };
 // const router = useRouter();
-export const fetchUser = createAsyncThunk(
+export const logManager = createAsyncThunk(
   "auth/fetch",
   async (data: { telephone: string; password: string }, thunkAPI) => {
     try {
       const { telephone, password } = data;
       return new Promise((resolve: any, reject) => {
-        SQuery.emit("login:user", { telephone, password }, async (res: any) => {
-          if (res.error) {
-            console.log(JSON.stringify(res));
-            return reject(thunkAPI.rejectWithValue({ error: res.error }));
-          }
-          let account = null;
-          try {
-            let model = await SQuery.model("account");
-            account = await model.newInstance({
-              id: res.response?.login.id,
-            });
-          } catch (error) {
-            return thunkAPI.rejectWithValue({ error });
-          }
-          if (account) {
-            return resolve({
-              account: account.$cache,
-              user: (await account.newParentInstance())?.$cache,
-            });
-          }
-          reject(thunkAPI.rejectWithValue({ error: res.error }));
-        });
-      });
-    } catch (error: any) {
-      return thunkAPI.rejectWithValue({ error: error.message });
-    }
-  }
-);
-
-export const registerUser = createAsyncThunk(
-  "auth/register",
-  async (
-    data: { telephone: string; password: string; name: string; carte: string },
-    thunkAPI
-  ) => {
-    try {
-      const { telephone, password, carte, name } = data;
-      return new Promise((resolve: any, reject) => {
         SQuery.emit(
-          "signup:user",
-          {
-            account: {
-              name: name,
-              password: password,
-              telephone: telephone,
-              carte: null,
-              imgProfile: [],
-            },
-            contacts: [],
-            transactions: [],
-            messenger: {
-              opened: [],
-              closed: [],
-            },
-            preference: {
-              nigthMode: false,
-              currentDevise: "rub",
-              watcthDifference: "rub/xof",
-            },
-          },
+          "login:manager",
+          { telephone, password },
           async (res: any) => {
             if (res.error) {
               console.log(JSON.stringify(res));
               return reject(thunkAPI.rejectWithValue({ error: res.error }));
             }
-            console.log({ res });
-            let user = null;
+            let account = null;
             try {
-              let model = await SQuery.model("user");
-              user = await model.newInstance({
-                id: res.response,
+              let model = await SQuery.model("account");
+              account = await model.newInstance({
+                id: res.response?.login.id,
               });
             } catch (error) {
-              console.log(error);
               return thunkAPI.rejectWithValue({ error });
             }
-            if (user) {
+            if (account) {
               return resolve({
-                user: user.$cache,
-                account: (await user.account)?.$cache,
+                account: account.$cache,
+                user: (await account.newParentInstance())?.$cache,
               });
             }
             reject(thunkAPI.rejectWithValue({ error: res.error }));
@@ -120,6 +61,7 @@ export const registerUser = createAsyncThunk(
     }
   }
 );
+
 const handleAsyncAction = (
   builder: ActionReducerMapBuilder<{
     user: any;
@@ -153,8 +95,8 @@ export const authSlice = createSlice({
   initialState: { ...initialState },
   reducers: {},
   extraReducers: (builder) => {
-    handleAsyncAction(builder, fetchUser);
-    handleAsyncAction(builder, registerUser);
+    handleAsyncAction(builder, logManager);
+    // handleAsyncAction(builder, createManager);
   },
 });
 

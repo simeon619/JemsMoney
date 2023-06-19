@@ -41,7 +41,7 @@ import {
   verticalScale,
 } from "../../fonctionUtilitaire/metrics";
 import { AppDispatch, RootState } from "../../store";
-import { registerUser } from "../../store/auth/authSlice";
+import { createManager } from "../../store/auth/authSlice";
 // Initialize Firebase JS SDK >=9.x.x
 // https://firebase.google.com/docs/web/setup
 try {
@@ -183,7 +183,7 @@ export default function signup() {
   function verifyAndNext(): void {
     // const tel = "+" + normeFormat[pays]?.indicatif + inputTelUser;
     dispatch(
-      registerUser({
+      createManager({
         telephone: phoneNumber,
         password,
         carte: "3456876509871235",

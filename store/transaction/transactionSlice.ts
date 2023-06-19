@@ -4,44 +4,33 @@ import { PURGE } from "redux-persist";
 import { RootState } from "..";
 import SQuery from "../../lib/SQueryClient";
 enablePatches();
-type accountSchema = {
+export type accountSchema = {
+  id: string;
   name: string;
   telephone: string;
-  profilePicture: string;
 } | null;
 type updateTransactionSchema = {
   data: {
     id: string;
-    sent?: { value: number; currency: string };
-    received?: { value: number; currency: string };
-    codePromo?: string;
-    senderFile?: any;
-    receiverName?: string;
-    country?: any;
-    telephone?: string;
-    carte?: string;
-    agenceReceiver?: string;
-    agenceSender?: string;
-    typeTransaction?: string;
+    managerFile?: any;
   };
 };
 export type transactionDataSchema = {
+  manager: accountSchema;
   senderAccount?: accountSchema;
   id?: string;
-  manager: accountSchema;
   discussionId: string;
-  __updatedAt?: number;
-  __createdAt?: number;
+  agenceReceiver?: string;
+  agenceSender?: string;
   receiverName?: string;
   senderFile?: any;
   managerFile?: any;
-  country?: any;
+  country?: string;
   telephone?: string;
   carte?: string;
-  agence?: string;
   codePromo?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt?: number;
+  updatedAt?: number;
   sent?: { value: number; currency: string };
   received?: { value: number; currency: string };
   status: "start" | "run" | "end" | "cancel" | "full" | "";
@@ -142,6 +131,15 @@ async function createTransaction({
         } else if (keyTransaction === "discussion") {
           objTransactionData["discussionId"] = transaction[keyTransaction].$id;
         } else if (
+          keyTransaction === "senderAccount" ||
+          keyTransaction === "manager"
+        ) {
+          objTransactionData[keyTransaction] = {
+            id: transaction[keyTransaction]?.$id,
+            name: transaction[keyTransaction]?.$cache.name,
+            telephone: transaction[keyTransaction]?.$cache.telephone,
+          };
+        } else if (
           keyTransaction === "__createdAt" ||
           keyTransaction === "__updatedAt"
         ) {
@@ -165,11 +163,15 @@ async function createTransaction({
   });
 
   const id = await transaction?._id;
+  console.log(
+    "🚀 ~ file: transactionSlice.ts:170 ~ transaction:245445",
+    transaction
+  );
   const senderFile = (await transaction?.senderFile)[0];
   const managerFile = (await transaction?.managerFile)[0];
   const updatedAt = await transaction?.__updatedAt;
   const createdAt = await transaction?.__createdAt;
-  const telephone = await transaction?.telephone;
+  const telephoneReceiver = await transaction?.telephone;
   const carte = await transaction?.carte;
   const codePromo = await transaction?.codePromo;
   const received = await transaction?.received;
@@ -178,17 +180,21 @@ async function createTransaction({
   const agenceReceiver = (await transaction?.agenceReceiver)?.$id;
   const agenceSender = (await transaction?.agenceSender)?.$id;
   const country = (await transaction?.country)?.$id;
-  const senderAccount = (await transaction?.senderAccount)?.$id;
+  const senderAccount = {
+    id: (await transaction?.senderAccount)?.$id,
+    name: (await transaction?.senderAccount)?.$cache.name,
+    telephone: (await transaction?.senderAccount)?.$cache.telephone,
+  };
   const manager = (await transaction?.manager)?.$id;
   const discussionId = (await transaction?.discussion)?.$id;
   const status = await transaction?.status;
   return {
     id,
     transactionId,
+    senderAccount,
     updatedAt,
     createdAt,
     receiverName,
-    senderAccount,
     manager,
     discussionId,
     status,
@@ -198,7 +204,8 @@ async function createTransaction({
     agenceSender,
     agenceReceiver,
     carte,
-    telephone,
+    telephoneReceiver,
+
     country,
     managerFile,
     senderFile,
@@ -272,10 +279,6 @@ export const fetchTransactions = createAsyncThunk<
         }
         const userInstance = await SQuery.newInstance("user", { id: UserId });
         let transactions = await userInstance?.transactions;
-        console.log(
-          "🚀 ~ file: transactionSlice.ts:324 ~ returnnewPromise ~ (await transactions.page()).items:",
-          (await transactions.page()).items.length
-        );
 
         let promiseTransaction = (await transactions.page()).items.map(
           (transaction: any) => {
@@ -358,10 +361,6 @@ export const transactionSlice = createSlice({
             ...state[status],
             ...transaction[status],
           };
-          console.log(
-            "🚀 ~ file: transactionSlice.ts:369 ~ dataTransactions.forEach ~ transaction[status]:",
-            transaction[status]
-          );
         }
       });
 

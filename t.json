@@ -1,0 +1,17 @@
+{
+  "agencies": [
+    {
+      "charge": 0.25,
+      "icon": "https://upload.wikimedia.org/wikipedia/fr/thumb/e/e9/Mtn-logo-svg.svg/1280px-Mtn-logo-svg.svg.png",
+      "managerName": "MArio luigi",
+      "name": "Orange MONEY",
+      "number": "+71012131517"
+    }
+  ],
+  "allowCarte": true,
+  "currency": "GTQ",
+  "digit": "10",
+  "icon": "https://flagcdn.com/gt.svg",
+  "indicatif": "+7",
+  "name": "Guatemala"
+}

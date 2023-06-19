@@ -18,7 +18,9 @@ import {
 import authSlice from "./auth/authSlice";
 import contactSlice from "./contact/contactSlice";
 import countrySlice from "./country/countrySlice";
+import countriesAPISlice from "./countryAPIslice";
 import entrepriseSlice from "./entreprise/entrepriseSlice";
+import managerSlice from "./manager/managerSlice";
 import messageSlice from "./message/messageSlice";
 import discussionSlice from "./messagerie/messagerieSlice";
 import preferenceSlice from "./preference/preferenceSlice";
@@ -56,6 +58,8 @@ const rootReducer = combineReducers({
   country: countrySlice,
   entreprise: entrepriseSlice,
   preference: preferenceSlice,
+  manager: managerSlice,
+  countriesAPISlice: countriesAPISlice,
 });
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 export const store = configureStore({

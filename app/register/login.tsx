@@ -25,7 +25,7 @@ import {
   verticalScale,
 } from "../../fonctionUtilitaire/metrics";
 import { AppDispatch, RootState } from "../../store";
-import { fetchUser } from "../../store/auth/authSlice";
+import { logManager } from "../../store/auth/authSlice";
 
 const login = () => {
   const { loading, isAuthenticated } = useSelector(
@@ -37,7 +37,7 @@ const login = () => {
   const [pays, setPays] = useState<"RU" | "CI" | "CM" | "TG" | "BE" | "">("CI");
 
   const [phoneNumber, setPhoneNumber] = useState<string>("");
-  const [inputTelUser, setInputTelUser] = useState<string>("0565848273");
+  const [inputTelUser, setInputTelUser] = useState<string>("0565848274");
 
   const [validTel, setValidTel] = useState<boolean>(false);
   const colorSheme = useColorScheme();
@@ -46,7 +46,6 @@ const login = () => {
   useEffect(() => {
     if (!navigationState?.key) return;
     if (isAuthenticated) {
-      console.log("gerone");
       router.replace("(tabs)");
     }
   }, [isAuthenticated, navigationState?.key]);
@@ -127,7 +126,7 @@ const login = () => {
   }, [validTel, password]);
 
   const logIn = () => {
-    dispatch(fetchUser({ telephone: phoneNumber, password }));
+    dispatch(logManager({ telephone: phoneNumber, password }));
   };
   return (
     <>

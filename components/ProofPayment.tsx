@@ -22,7 +22,6 @@ import {
 import { TransactionServer } from "../fonctionUtilitaire/type";
 import { AppDispatch } from "../store";
 import { Agency } from "../store/country/countrySlice";
-import { updateTransaction } from "../store/transaction/transactionSlice";
 import ImageRatio from "./ImageRatio";
 import { MonoText } from "./StyledText";
 import { ScrollView, Text, View } from "./Themed";
@@ -200,11 +199,11 @@ const ProofPayment = ({
   };
   function sendServer(): void {
     if (!!prepareImage?.buffer) {
-      dispatch(
-        updateTransaction({
-          data: { id: transactionId, senderFile: [prepareImage] },
-        })
-      );
+      // dispatch(
+      //   updateTransaction({
+      //     data: { id: transactionId, senderFile: [prepareImage] },
+      //   })
+      // );
     } else {
       Toast.show({
         text1: "please attach screenshot of receipt",

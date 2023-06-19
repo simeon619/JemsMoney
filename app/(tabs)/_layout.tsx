@@ -8,7 +8,12 @@ import {
 import { Image } from "expo-image";
 import { Link, useRouter } from "expo-router";
 import { memo } from "react";
-import { Pressable, useColorScheme, useWindowDimensions } from "react-native";
+import {
+  Pressable,
+  TouchableOpacity,
+  useColorScheme,
+  useWindowDimensions,
+} from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { MonoText } from "../../components/StyledText";
 import { View } from "../../components/Themed";
@@ -16,11 +21,11 @@ import Colors from "../../constants/Colors";
 import {
   horizontalScale,
   moderateScale,
+  shadow,
   verticalScale,
 } from "../../fonctionUtilitaire/metrics";
-import { fetchUser } from "../../store/auth/authSlice";
+import { logManager } from "../../store/auth/authSlice";
 
-import { AntDesign } from "@expo/vector-icons";
 import { AppDispatch, RootState } from "../../store";
 import EventScreen from "./event";
 import Home from "./index";
@@ -81,7 +86,7 @@ const CustomDrawerContent = memo((props: any) => {
         }}
         onPress={() => {
           dispatch(
-            fetchUser({ telephone: "+2250565848273", password: "2567" })
+            logManager({ telephone: "+2250565848273", password: "2567" })
           );
         }}
       >
@@ -136,32 +141,43 @@ export default function DrawerLayout() {
           ),
           drawerItemStyle: { marginTop: verticalScale(35) },
           headerRight: () => (
-            <Pressable
-              style={{
-                flexDirection: "row",
-                gap: 5,
-                alignItems: "center",
-              }}
+            <TouchableOpacity
+              style={[
+                {
+                  flexDirection: "row",
+                  gap: 5,
+                  alignItems: "center",
+                  borderWidth: 0.4,
+                  borderColor: "#4444",
+                  backgroundColor: "#FAFBFF",
+                  marginRight: horizontalScale(10),
+                  borderRadius: 10,
+                  paddingVertical: verticalScale(5),
+                  paddingHorizontal: horizontalScale(15),
+                  justifyContent: "space-around",
+                },
+                shadow(5),
+              ]}
               onPress={() => {
                 router.push("/modal");
               }}
             >
-              {/* <MonoText
+              <FontAwesome
+                name="search"
+                size={moderateScale(17)}
+                color={Colors[colorScheme ?? "light"].text}
+                // style={{ marginRight: 25 }}
+              />
+              <MonoText
                 style={{
                   color: Colors[colorScheme ?? "light"].text,
-                  fontSize: moderateScale(16),
+                  backgroundColor: "#0000",
+                  fontSize: moderateScale(17),
                 }}
               >
-                Find contact
-              </MonoText> */}
-
-              <AntDesign
-                name="contacts"
-                size={28}
-                color={Colors[colorScheme ?? "light"].text}
-                style={{ marginRight: 25 }}
-              />
-            </Pressable>
+                Find transaction
+              </MonoText>
+            </TouchableOpacity>
           ),
         }}
       />
